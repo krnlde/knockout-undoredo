@@ -1,0 +1,20 @@
+{
+  "name": "knockout-undoredo",
+  "version": "1.0.0",
+  "description": "A multi-purpose undo/redo manger for knockout",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "undo",
+    "redo",
+    "knockout",
+    "ko"
+  ],
+  "author": "Kai Dorschner",
+  "license": "MIT",
+  "dependencies": {
+    "knockout": "^3.4.1"
+  }
+}
