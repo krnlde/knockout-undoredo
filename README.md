@@ -2,22 +2,22 @@
 This library provides a generic way of history-management for knockout observables.
 
 ## Install
-`npm install knockout-undoredo`
+`$> npm install knockout-undoredo`
 
-## Example
+## Usage
 
-```
+```js
 import ko from 'knockout';
 import UndoManager from 'knockout-undoredo';
 
-class VM {
+class ViewModel {
     constructor() {
         this.name = ko.observable('Kai');
         this.message = ko.pureComputed(() => `Hello ${this.name()}, how are you`);
     }
 }
 
-const vm = new VM();
+const vm = new ViewModel();
 const undomanager = new UndoManager(vm);
 ko.applyBindings(vm);
 
