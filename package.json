@@ -1,6 +1,6 @@
 {
   "name": "knockout-undoredo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A multi-purpose undo/redo manger for knockout",
   "main": "dist/knockout-undoredo.min.js",
   "scripts": {
