@@ -1,12 +1,10 @@
 import fs from 'fs';
 
-import browserify from 'browserify';
-import buffer from 'vinyl-buffer';
 import minimist from 'minimist';
 import sequence from 'run-sequence';
-import source from 'vinyl-source-stream';
 
 import gulp from 'gulp';
+import babel from 'gulp-babel';
 import bump from 'gulp-bump';
 import changelog from 'gulp-conventional-changelog';
 import eslint from 'gulp-eslint';
@@ -65,10 +63,9 @@ gulp.task('test', () =>
 );
 
 gulp.task('build', ['lint', 'test'], () =>
-  browserify({entries: ['index.js'], standalone: 'UndoManager'})
-    .transform('babelify')
-    .bundle()
-    .pipe(source('knockout-undoredo.min.js'))
+  gulp.src('index.js')
+    .pipe(babel())
+    .pipe(rename('knockout-undoredo.min.js'))
     .pipe(gulp.dest('dist'))
 );
 
