@@ -12,6 +12,7 @@ import bump from 'gulp-bump';
 import changelog from 'gulp-conventional-changelog';
 import eslint from 'gulp-eslint';
 import git from 'gulp-git';
+import test from 'gulp-mocha';
 import notify from 'gulp-notify';
 import rename from 'gulp-rename';
 import uglify from 'gulp-uglify';
@@ -47,20 +48,25 @@ gulp.task('commit-changes', () => {
 
 gulp.task('create-new-tag', (cb) => {
   var version = getPackageJsonVersion();
-  git.tag(version, 'Created Tag for version: ' + version, (error) => {
+  git.tag(`v${version}`, 'Created Tag for version: ' + version, (error) => {
     if (error) return cb(error);
     // git.push('origin', 'master', {args: '--tags'}, cb);
   });
 });
 
 gulp.task('lint', () => {
-  gulp.src('./index.js')
+  return gulp.src('./index.js')
     .pipe(eslint())
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());
 });
 
-gulp.task('build', ['lint'], () => {
+gulp.task('test', () => {
+  return gulp.src('./test/*')
+    .pipe(test({reporter: 'base'}));
+});
+
+gulp.task('build', ['lint', 'test'], () => {
   const file = './index.js';
   const bundler = browserify({
     entries: [file],
