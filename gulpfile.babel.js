@@ -64,8 +64,12 @@ gulp.task('test', () =>
 
 gulp.task('build', ['lint', 'test'], () =>
   gulp.src('index.js')
+    .pipe(rename('knockout-undoredo.js'))
     .pipe(babel())
-    .pipe(rename('knockout-undoredo.min.js'))
+    .pipe(gulp.dest('dist'))
+
+    .pipe(uglify())
+    .pipe(rename({suffix: '.min'}))
     .pipe(gulp.dest('dist'))
 );
 
