@@ -3,7 +3,7 @@ import {expect} from 'chai';
 
 import UndoManager from '../index';
 
-
+console.log(UndoManager);
 class ViewModel {
   name       = ko.observable('Obama');
   birthday   = ko.observable(new Date(1961, 7, 4));

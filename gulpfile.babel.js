@@ -1,11 +1,10 @@
 import fs from 'fs';
 
-import sequnece from 'run-sequence';
-import minimist from 'minimist';
-import source from 'vinyl-source-stream';
-import buffer from 'vinyl-buffer';
 import browserify from 'browserify';
-import babelify from 'babelify';
+import buffer from 'vinyl-buffer';
+import minimist from 'minimist';
+import sequence from 'run-sequence';
+import source from 'vinyl-source-stream';
 
 import gulp from 'gulp';
 import bump from 'gulp-bump';
@@ -30,81 +29,51 @@ gulp.task('bump-version', () => {
     .pipe(gulp.dest('./'));
 });
 
-gulp.task('changelog', function () {
-  return gulp.src('CHANGELOG.md', {
-    buffer: false
-  })
+gulp.task('changelog', () =>
+  gulp.src('CHANGELOG.md', {buffer: false})
     .pipe(changelog({
       preset: 'angular' // Or to any other commit message convention you use.
     }))
-    .pipe(gulp.dest('./'));
-});
+    .pipe(gulp.dest('./'))
+);
 
-gulp.task('commit-changes', () => {
-  return gulp.src('.')
+gulp.task('commit-changes', () =>
+  gulp.src('.')
     .pipe(git.add())
-    .pipe(git.commit('[Prerelease] Bumped version number'));
-});
+    .pipe(git.commit('[Prerelease] Bumped version number'))
+);
 
 gulp.task('create-new-tag', (cb) => {
   var version = getPackageJsonVersion();
   git.tag(`v${version}`, 'Created Tag for version: ' + version, (error) => {
     if (error) return cb(error);
+    cb();
     // git.push('origin', 'master', {args: '--tags'}, cb);
   });
 });
 
-gulp.task('lint', () => {
-  return gulp.src('./index.js')
+gulp.task('lint', () =>
+  gulp.src('./index.js')
     .pipe(eslint())
     .pipe(eslint.format())
-    .pipe(eslint.failAfterError());
-});
+    .pipe(eslint.failAfterError())
+);
 
-gulp.task('test', () => {
-  return gulp.src('./test/*')
-    .pipe(test({reporter: 'base'}));
-});
+gulp.task('test', () =>
+  gulp.src('./test/*')
+    .pipe(test({reporter: 'base'}))
+);
 
-gulp.task('build', ['lint', 'test'], () => {
-  const file = './index.js';
-  const bundler = browserify({
-    entries: [file],
-    transform: [babelify]
-  });
+gulp.task('build', ['lint', 'test'], () =>
+  browserify({entries: ['index.js'], standalone: 'UndoManager'})
+    .transform('babelify')
+    .bundle()
+    .pipe(source('knockout-undoredo.min.js'))
+    .pipe(gulp.dest('dist'))
+);
 
-  function rebundle() {
-    const then = new Date();
-    const stream = bundler.bundle();
-    return stream
-      .on('error', handleErrors)
-      .pipe(source(file))
-      .pipe(buffer())
-      .pipe(uglify())
-      .pipe(rename({basename: 'knockout-undoredo.min'}))
-      .pipe(notify())
-      .pipe(gulp.dest('./dist/'))
-  }
-
-  // listen for an update and run rebundle
-  bundler.on('update', () => {
-    const then = new Date();
-    gutil.log('Rebundling...');
-
-    rebundle().on('end', () => {
-      const now = new Date();
-      const sec = ((now - then) / 1000).toPrecision(3);
-
-      gutil.log('Rebundled after', gutil.colors.magenta(sec + ' s'));
-    });
-  });
-
-  // run it once the first time buildScript is called
-  return rebundle();
-});
-
-gulp.task('do-release', (done) => {
-  sequnece(
+gulp.task('do-release', (done) =>
+  sequence(
     'build',
     'bump-version',
     'changelog',
@@ -113,10 +82,10 @@ gulp.task('do-release', (done) => {
     (error) => {
       if (error) gutil.log(error.message);
       else gutil.log('RELEASE FINISHED SUCCESSFULLY');
-      callback(error);
+      done(error);
     },
-  );
-});
+  )
+);
 
 
 function getPackageJsonVersion() {
