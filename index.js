@@ -38,7 +38,6 @@ export default class UndoManager {
   _ignoreChanges = false;
 
   constructor(vm, {steps = 30, throttle = 300} = {}) {
-    console.log('Setting throttle', throttle);
     this.MAX_UNDO_STEPS = steps;
     this.throttle       = throttle;
     this.listen(vm);
