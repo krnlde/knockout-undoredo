@@ -1,3 +1,8 @@
+[![npm version](https://badge.fury.io/js/knockout-undoredo.svg)](http://badge.fury.io/js/knockout-undoredo)
+[![Build Status](https://travis-ci.org/krnlde/knockout-undoredo.svg?branch=master)](https://travis-ci.org/krnlde/knockout-undoredo)
+[![Dependency Status](https://david-dm.org/krnlde/knockout-undoredo.svg)](https://david-dm.org/krnlde/knockout-undoredo)
+[![devDependency Status](https://david-dm.org/krnlde/knockout-undoredo/dev-status.svg?theme=shields.io)](https://david-dm.org/krnlde/knockout-undoredo#info=devDependencies)
+
 # Knockout Undo-Redo
 This library provides a generic way of history-management for knockout observables.
 
