@@ -2,6 +2,7 @@
   "name": "knockout-undoredo",
   "version": "1.0.3",
   "description": "A multi-purpose undo/redo manger for knockout",
+  "repository": "krnlde/knockout-undoredo",
   "main": "dist/knockout-undoredo.min.js",
   "scripts": {
     "test": "mocha --require babel-register"
