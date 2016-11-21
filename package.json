@@ -1,7 +1,7 @@
 {
   "name": "knockout-undoredo",
   "version": "1.0.5",
-  "description": "A multi-purpose undo/redo manger for knockout",
+  "description": "Generic undo/redo history-management for knockout observables",
   "repository": "krnlde/knockout-undoredo",
   "main": "dist/knockout-undoredo.min.js",
   "scripts": {

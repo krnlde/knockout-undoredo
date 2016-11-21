@@ -4,10 +4,13 @@
 [![devDependency Status](https://david-dm.org/krnlde/knockout-undoredo/dev-status.svg?theme=shields.io)](https://david-dm.org/krnlde/knockout-undoredo#info=devDependencies)
 
 # Knockout Undo-Redo
-This library provides a generic way of history-management for knockout observables.
+Generic undo/redo history-management for knockout observables.
+
 
 ## Install
+
 `$ npm install knockout-undoredo`
+
 
 ## Usage
 
@@ -56,6 +59,7 @@ console.log(vm.message()); // Thanks Clinton
 undomanager.undo();
 console.log(vm.message()); // Thanks Obama
 ```
+
 
 ## Constructor Options
 
