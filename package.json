@@ -13,6 +13,9 @@
     "knockout",
     "ko"
   ],
+  "files": [
+    "dist"
+  ],
   "author": "Kai Dorschner",
   "license": "MIT",
   "engines": {
