@@ -15,6 +15,9 @@
   ],
   "author": "Kai Dorschner",
   "license": "MIT",
+  "engines": {
+    "node": ">= 5.0.0"
+  },
   "dependencies": {
     "knockout": "^3.3.0"
   },
