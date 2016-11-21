@@ -1,3 +1,13 @@
+<a name="1.0.6"></a>
+## [1.0.6](https://github.com/krnlde/knockout-undoredo/compare/v1.0.5...v1.0.6) (2016-11-21)
+
+
+### Bug Fixes
+
+* **readme:** Improve wording and fix typos. ([d1851c3](https://github.com/krnlde/knockout-undoredo/commit/d1851c3))
+
+
+
 <a name="1.0.5"></a>
 ## [1.0.5](https://github.com/krnlde/knockout-undoredo/compare/v1.0.4...v1.0.5) (2016-11-21)
 
