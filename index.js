@@ -19,6 +19,7 @@ export default class UndoManager {
    */
   future = [];
 
+
   /**
    * [throttle description]
    * @type {Number}
@@ -32,10 +33,12 @@ export default class UndoManager {
    */
   undoCollection = [];
 
+  _subscriptions = [];
   _batchTimeout = null;
   _ignoreChanges = false;
 
   constructor(vm, {steps = 30, throttle = 300} = {}) {
+    console.log('Setting throttle', throttle);
     this.MAX_UNDO_STEPS = steps;
     this.throttle       = throttle;
     this.listen(vm);
@@ -49,11 +52,12 @@ export default class UndoManager {
 
         previousValue = Array.isArray(previousValue) ? [...previousValue] : previousValue;
 
-        observable.subscribe((nextValue) => {
+        const subscription = observable.subscribe((nextValue) => {
           nextValue = Array.isArray(nextValue) ? [...nextValue] : nextValue;
           this.change({observable, nextValue, previousValue});
           previousValue = nextValue;
         });
+        this._subscriptions.push(subscription);
 
         if (Array.isArray(previousValue)) {
           previousValue.forEach((item) => this.listen(item));
@@ -65,12 +69,12 @@ export default class UndoManager {
   change({observable, nextValue, previousValue}) {
     if (this._ignoreChanges) return;
     if (this._batchTimeout) clearTimeout(this._batchTimeout);
+    else this.past.push(this.undoCollection);
 
     const atomicChange = {observable, nextValue, previousValue};
     this.undoCollection.push(atomicChange);
 
     const afterCollecting = () => {
-      this.past.push(this.undoCollection);
       this.past = this.past.slice(-this.MAX_UNDO_STEPS);
       this.future = [];
       this.undoCollection = [];
@@ -82,8 +86,10 @@ export default class UndoManager {
   }
 
   destroy() {
-    past = [];
-    future = [];
+    this.past = [];
+    this.future = [];
+    this._subscriptions.forEach((subscription) => subscription.dispose());
+    this._subscriptions = [];
   }
 
   undo() {
