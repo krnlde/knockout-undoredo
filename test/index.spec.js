@@ -3,7 +3,6 @@ import {expect} from 'chai';
 
 import UndoManager from '../index';
 
-console.log(UndoManager);
 class ViewModel {
   name       = ko.observable('Obama');
   birthday   = ko.observable(new Date(1961, 7, 4));
@@ -30,6 +29,7 @@ describe('Knockout Undo Manager', () => {
       viewModel.name('Obama');
       undomanager = new UndoManager(viewModel);
     });
+    afterEach(() => undomanager.destroy());
 
     it('should be instanceof UndoManager', () => {
       expect(undomanager).to.be.instanceOf(UndoManager);
@@ -40,7 +40,7 @@ describe('Knockout Undo Manager', () => {
       expect(undomanager.undo).be.a.function;
     });
 
-    it('should a redo method', () => {
+    it('should have a redo method', () => {
       expect(undomanager).to.have.property('redo');
       expect(undomanager.redo).be.a.function;
     });
@@ -54,6 +54,7 @@ describe('Knockout Undo Manager', () => {
       viewModel.name('Obama');
       undomanager = new UndoManager(viewModel, {steps: steps, throttle: 0});
     });
+    afterEach(() => undomanager.destroy());
 
     it('should undo the last change', () => {
       expect(viewModel.name()).to.equal('Obama');
@@ -98,6 +99,7 @@ describe('Knockout Undo Manager', () => {
       viewModel.name('Obama');
       undomanager = new UndoManager(viewModel, {steps: 3, throttle: throttle});
     });
+    afterEach(() => undomanager.destroy());
 
     it(`should undo all changes within ${throttle}ms in one step`, async () => {
       viewModel.name('One');
@@ -109,6 +111,20 @@ describe('Knockout Undo Manager', () => {
 
       undomanager.undo();
       expect(viewModel.name()).to.equal('Obama');
+    });
+
+    it(`should bundle all changes within ${throttle}ms into one changeset`, async () => {
+      viewModel.name('One');
+      viewModel.name('Two');
+      viewModel.name('Three');
+      viewModel.name('Four');
+
+      await waitFor(throttle);
+
+      viewModel.name('Five');
+      viewModel.name('Six');
+      undomanager.undo();
+      expect(viewModel.name()).to.equal('Four');
     });
 
   });
