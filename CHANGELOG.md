@@ -1,3 +1,19 @@
+<a name="1.0.5"></a>
+## [1.0.5](https://github.com/krnlde/knockout-undoredo/compare/v1.0.4...v1.0.5) (2016-11-21)
+
+
+### Bug Fixes
+
+* **build:** Improve engines restrictions for travis. ([98e701b](https://github.com/krnlde/knockout-undoredo/commit/98e701b))
+* **lib:** Fixing behavior when changesets should be pushed to the stack. ([3b4a0cd](https://github.com/krnlde/knockout-undoredo/commit/3b4a0cd))
+
+
+### Features
+
+* **test:** Adding further tests for changesets. ([81ab355](https://github.com/krnlde/knockout-undoredo/commit/81ab355))
+
+
+
 <a name="1.0.4"></a>
 ## [1.0.4](https://github.com/krnlde/knockout-undoredo/compare/v1.0.3...v1.0.4) (2016-11-21)
 

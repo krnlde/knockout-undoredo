@@ -37,36 +37,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var UndoManager = function () {
 
   /**
-   * [throttle description]
-   * @type {Number}
-   */
-
-
-  /**
-   * Stack for past state snapshots
-   * @type {Array}
-   */
-  function UndoManager(vm) {
-    var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        _ref$steps = _ref.steps,
-        steps = _ref$steps === undefined ? 30 : _ref$steps,
-        _ref$throttle = _ref.throttle,
-        throttle = _ref$throttle === undefined ? 300 : _ref$throttle;
-
-    (0, _classCallCheck3.default)(this, UndoManager);
-    this.past = [];
-    this.future = [];
-    this.throttle = 300;
-    this.undoCollection = [];
-    this._batchTimeout = null;
-    this._ignoreChanges = false;
-
-    this.MAX_UNDO_STEPS = steps;
-    this.throttle = throttle;
-    this.listen(vm);
-  }
-
-  /**
    * A collection for all changes done within the {@see throttle} timeout.
    * This acts as a full rollback path.
    * @type {Array}
@@ -81,6 +51,37 @@ var UndoManager = function () {
   /**
    * Determins how many undo/redo steps will be stored in memory.
    * @type {Number}
+   */
+  function UndoManager(vm) {
+    var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        _ref$steps = _ref.steps,
+        steps = _ref$steps === undefined ? 30 : _ref$steps,
+        _ref$throttle = _ref.throttle,
+        throttle = _ref$throttle === undefined ? 300 : _ref$throttle;
+
+    (0, _classCallCheck3.default)(this, UndoManager);
+    this.past = [];
+    this.future = [];
+    this.throttle = 300;
+    this.undoCollection = [];
+    this._subscriptions = [];
+    this._batchTimeout = null;
+    this._ignoreChanges = false;
+
+    this.MAX_UNDO_STEPS = steps;
+    this.throttle = throttle;
+    this.listen(vm);
+  }
+
+  /**
+   * [throttle description]
+   * @type {Number}
+   */
+
+
+  /**
+   * Stack for past state snapshots
+   * @type {Array}
    */
 
 
@@ -106,11 +107,12 @@ var UndoManager = function () {
 
               previousValue = Array.isArray(previousValue) ? [].concat((0, _toConsumableArray3.default)(previousValue)) : previousValue;
 
-              observable.subscribe(function (nextValue) {
+              var subscription = observable.subscribe(function (nextValue) {
                 nextValue = Array.isArray(nextValue) ? [].concat((0, _toConsumableArray3.default)(nextValue)) : nextValue;
                 _this.change({ observable: observable, nextValue: nextValue, previousValue: previousValue });
                 previousValue = nextValue;
               });
+              _this._subscriptions.push(subscription);
 
               if (Array.isArray(previousValue)) {
                 previousValue.forEach(function (item) {
@@ -145,13 +147,12 @@ var UndoManager = function () {
           previousValue = _ref2.previousValue;
 
       if (this._ignoreChanges) return;
-      if (this._batchTimeout) clearTimeout(this._batchTimeout);
+      if (this._batchTimeout) clearTimeout(this._batchTimeout);else this.past.push(this.undoCollection);
 
       var atomicChange = { observable: observable, nextValue: nextValue, previousValue: previousValue };
       this.undoCollection.push(atomicChange);
 
       var afterCollecting = function afterCollecting() {
-        _this2.past.push(_this2.undoCollection);
         _this2.past = _this2.past.slice(-_this2.MAX_UNDO_STEPS);
         _this2.future = [];
         _this2.undoCollection = [];
@@ -163,8 +164,12 @@ var UndoManager = function () {
   }, {
     key: 'destroy',
     value: function destroy() {
-      past = [];
-      future = [];
+      this.past = [];
+      this.future = [];
+      this._subscriptions.forEach(function (subscription) {
+        return subscription.dispose();
+      });
+      this._subscriptions = [];
     }
   }, {
     key: 'undo',
