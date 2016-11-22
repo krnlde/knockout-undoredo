@@ -1,3 +1,14 @@
+<a name="1.0.7"></a>
+## [1.0.7](https://github.com/krnlde/knockout-undoredo/compare/v1.0.6...v1.0.7) (2016-11-22)
+
+
+### Features
+
+* **build:** Add node security plattform (nsp) check on build ([dcf97de](https://github.com/krnlde/knockout-undoredo/commit/dcf97de))
+* **lib:** cleanup listeners via own garbage collection ([8580c6c](https://github.com/krnlde/knockout-undoredo/commit/8580c6c))
+
+
+
 <a name="1.0.6"></a>
 ## [1.0.6](https://github.com/krnlde/knockout-undoredo/compare/v1.0.5...v1.0.6) (2016-11-21)
 

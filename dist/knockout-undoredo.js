@@ -4,21 +4,25 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
-
-var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);
-
 var _slicedToArray2 = require('babel-runtime/helpers/slicedToArray');
 
 var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
+
+var _getIterator2 = require('babel-runtime/core-js/get-iterator');
+
+var _getIterator3 = _interopRequireDefault(_getIterator2);
 
 var _entries = require('babel-runtime/core-js/object/entries');
 
 var _entries2 = _interopRequireDefault(_entries);
 
-var _getIterator2 = require('babel-runtime/core-js/get-iterator');
+var _typeof2 = require('babel-runtime/helpers/typeof');
 
-var _getIterator3 = _interopRequireDefault(_getIterator2);
+var _typeof3 = _interopRequireDefault(_typeof2);
+
+var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
+
+var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);
 
 var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');
 
@@ -90,57 +94,155 @@ var UndoManager = function () {
     value: function listen(vm) {
       var _this = this;
 
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+      if (_knockout2.default.isWritableObservable(vm) && !_knockout2.default.isComputed(vm) && _knockout2.default.isSubscribable(vm)) {
+        var _ret = function () {
+          var observable = vm;
+          var currentValue = observable.peek();
 
-      try {
-        for (var _iterator = (0, _getIterator3.default)((0, _entries2.default)(vm)), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = (0, _slicedToArray3.default)(_step.value, 2),
-              key = _step$value[0],
-              item = _step$value[1];
+          if (Array.isArray(currentValue)) {
+            currentValue = [].concat((0, _toConsumableArray3.default)(currentValue)); // clone
 
-          if (_knockout2.default.isWritableObservable(item) && !_knockout2.default.isComputed(item) && _knockout2.default.isSubscribable(item)) {
-            (function () {
-              var observable = item;
-              var previousValue = observable.peek();
+            _this.listen(currentValue);
 
-              previousValue = Array.isArray(previousValue) ? [].concat((0, _toConsumableArray3.default)(previousValue)) : previousValue;
-
-              var subscription = observable.subscribe(function (nextValue) {
-                nextValue = Array.isArray(nextValue) ? [].concat((0, _toConsumableArray3.default)(nextValue)) : nextValue;
-                _this.change({ observable: observable, nextValue: nextValue, previousValue: previousValue });
-                previousValue = nextValue;
+            var subscription = observable.subscribe(function (changes) {
+              var nextValue = void 0;
+              changes.forEach(function (change) {
+                switch (change.status) {
+                  case 'added':
+                    nextValue = currentValue.splice(change.index, 0, change.value);
+                    _this.listen(change.value);
+                    break;
+                  case 'deleted':
+                    nextValue = currentValue.splice(change.index, 1);
+                    _this.cancelListen(change.value);
+                    break;
+                }
               });
-              _this._subscriptions.push(subscription);
+              _this.change({ observable: observable, nextValue: nextValue, previousValue: currentValue });
+              currentValue = nextValue;
+            }, null, 'arrayChange');
 
-              if (Array.isArray(previousValue)) {
-                previousValue.forEach(function (item) {
-                  return _this.listen(item);
-                });
+            _this._subscriptions.push(subscription);
+          } else {
+            var _subscription = observable.subscribe(function (nextValue) {
+              _this.change({ observable: observable, nextValue: nextValue, previousValue: currentValue });
+              currentValue = nextValue;
+            });
+            _this._subscriptions.push(_subscription);
+          }
+          return {
+            v: void 0
+          };
+        }();
+
+        if ((typeof _ret === 'undefined' ? 'undefined' : (0, _typeof3.default)(_ret)) === "object") return _ret.v;
+      }
+
+      if ((typeof vm === 'undefined' ? 'undefined' : (0, _typeof3.default)(vm)) === 'object') {
+        var entries = (0, _entries2.default)(vm);
+
+        if (entries.length) {
+          var _iteratorNormalCompletion = true;
+          var _didIteratorError = false;
+          var _iteratorError = undefined;
+
+          try {
+            for (var _iterator = (0, _getIterator3.default)(entries), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+              var _step$value = (0, _slicedToArray3.default)(_step.value, 2),
+                  key = _step$value[0],
+                  item = _step$value[1];
+
+              this.listen(item);
+            }
+          } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion && _iterator.return) {
+                _iterator.return();
               }
-            })();
+            } finally {
+              if (_didIteratorError) {
+                throw _iteratorError;
+              }
+            }
           }
+
+          return;
         }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
+      }
+    }
+  }, {
+    key: 'cancelListen',
+    value: function cancelListen(vm) {
+      var _this2 = this;
+
+      if (_knockout2.default.isWritableObservable(vm) && !_knockout2.default.isComputed(vm) && _knockout2.default.isSubscribable(vm)) {
+        var _ret2 = function () {
+          var observable = vm;
+          var currentValue = observable.peek();
+
+          _this2._subscriptions = _this2._subscriptions.reduce(function (reduced, subscription) {
+            if (subscription._target === observable) {
+              subscription.dispose();
+            } else {
+              reduced.push(subscription);
+            }
+            return reduced;
+          }, []);
+
+          if (Array.isArray(currentValue)) {
+            _this2.cancelListen(currentValue);
           }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
+          return {
+            v: void 0
+          };
+        }();
+
+        if ((typeof _ret2 === 'undefined' ? 'undefined' : (0, _typeof3.default)(_ret2)) === "object") return _ret2.v;
+      }
+
+      if ((typeof vm === 'undefined' ? 'undefined' : (0, _typeof3.default)(vm)) === 'object') {
+        var entries = (0, _entries2.default)(vm);
+
+        if (entries.length) {
+          console.log('is enumerable');
+          var _iteratorNormalCompletion2 = true;
+          var _didIteratorError2 = false;
+          var _iteratorError2 = undefined;
+
+          try {
+            for (var _iterator2 = (0, _getIterator3.default)(entries), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+              var _step2$value = (0, _slicedToArray3.default)(_step2.value, 2),
+                  key = _step2$value[0],
+                  item = _step2$value[1];
+
+              this.cancelListen(item);
+            }
+          } catch (err) {
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                _iterator2.return();
+              }
+            } finally {
+              if (_didIteratorError2) {
+                throw _iteratorError2;
+              }
+            }
           }
+
+          return;
         }
       }
     }
   }, {
     key: 'change',
     value: function change(_ref2) {
-      var _this2 = this;
+      var _this3 = this;
 
       var observable = _ref2.observable,
           nextValue = _ref2.nextValue,
@@ -153,10 +255,10 @@ var UndoManager = function () {
       this.undoCollection.push(atomicChange);
 
       var afterCollecting = function afterCollecting() {
-        _this2.past = _this2.past.slice(-_this2.MAX_UNDO_STEPS);
-        _this2.future = [];
-        _this2.undoCollection = [];
-        _this2._batchTimeout = null;
+        _this3.past = _this3.past.slice(-_this3.MAX_UNDO_STEPS);
+        _this3.future = [];
+        _this3.undoCollection = [];
+        _this3._batchTimeout = null;
       };
 
       if (this.throttle) this._batchTimeout = setTimeout(afterCollecting, this.throttle);else afterCollecting();
@@ -174,7 +276,7 @@ var UndoManager = function () {
   }, {
     key: 'undo',
     value: function undo() {
-      var _this3 = this;
+      var _this4 = this;
 
       if (!this.past.length) return;
       if (this._batchTimeout) {
@@ -210,14 +312,14 @@ var UndoManager = function () {
         }
       });
       setTimeout(function () {
-        return _this3._ignoreChanges = false;
+        return _this4._ignoreChanges = false;
       });
       // console.log({past: this.past.length, future: this.future.length});
     }
   }, {
     key: 'redo',
     value: function redo() {
-      var _this4 = this;
+      var _this5 = this;
 
       if (!this.future.length) return;
       if (this._batchTimeout) {
@@ -253,7 +355,7 @@ var UndoManager = function () {
         }
       });
       setTimeout(function () {
-        return _this4._ignoreChanges = false;
+        return _this5._ignoreChanges = false;
       });
       // console.log({past: this.past.length, future: this.future.length});
     }
