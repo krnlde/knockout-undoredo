@@ -60,7 +60,7 @@ gulp.task('lint', () =>
 
 gulp.task('test', () =>
   gulp.src('./test/*')
-    .pipe(test({reporter: 'base'}))
+    .pipe(test({reporter: 'spec'}))
 );
 
 gulp.task('security-checkup', (cb) => {
