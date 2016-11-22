@@ -44,23 +44,85 @@ export default class UndoManager {
   }
 
   listen(vm) {
-    for (let [key, item] of Object.entries(vm)) {
-      if (ko.isWritableObservable(item) && !ko.isComputed(item) && ko.isSubscribable(item)) {
-        const observable = item;
-        let previousValue = observable.peek();
+    if (ko.isWritableObservable(vm) && !ko.isComputed(vm) && ko.isSubscribable(vm)) {
+      const observable = vm;
+      let currentValue = observable.peek();
 
-        previousValue = Array.isArray(previousValue) ? [...previousValue] : previousValue;
+      if (Array.isArray(currentValue)) {
+        currentValue = [...currentValue]; // clone
 
+        this.listen(currentValue);
+
+        const subscription = observable.subscribe((changes) => {
+          let nextValue;
+          changes.forEach((change) => {
+            switch (change.status) {
+              case 'added':
+                nextValue = currentValue.splice(change.index, 0, change.value);
+                this.listen(change.value);
+                break;
+              case 'deleted':
+                nextValue = currentValue.splice(change.index, 1);
+                this.cancelListen(change.value);
+                break;
+            }
+          });
+          this.change({observable, nextValue, previousValue: currentValue});
+          currentValue = nextValue;
+        }, null, 'arrayChange');
+
+        this._subscriptions.push(subscription);
+      } else {
         const subscription = observable.subscribe((nextValue) => {
-          nextValue = Array.isArray(nextValue) ? [...nextValue] : nextValue;
-          this.change({observable, nextValue, previousValue});
-          previousValue = nextValue;
+          this.change({observable, nextValue, previousValue: currentValue});
+          currentValue = nextValue;
         });
         this._subscriptions.push(subscription);
+      }
+      return;
+    }
 
-        if (Array.isArray(previousValue)) {
-          previousValue.forEach((item) => this.listen(item));
+    if (typeof vm === 'object') {
+      const entries = Object.entries(vm);
+
+      if (entries.length) {
+        for (let [key, item] of entries) {
+          this.listen(item);
         }
+        return;
+      }
+    }
+  }
+
+  cancelListen(vm) {
+    if (ko.isWritableObservable(vm) && !ko.isComputed(vm) && ko.isSubscribable(vm)) {
+      const observable = vm;
+      const currentValue = observable.peek();
+
+      this._subscriptions = this._subscriptions.reduce((reduced, subscription) => {
+        if (subscription._target === observable) {
+          subscription.dispose();
+        } else {
+          reduced.push(subscription);
+        }
+        return reduced;
+      }, []);
+
+      if (Array.isArray(currentValue)) {
+        this.cancelListen(currentValue);
+      }
+      return;
+    }
+
+    if (typeof vm === 'object') {
+      const entries = Object.entries(vm);
+
+      if (entries.length) {
+        console.log('is enumerable');
+        for (let [key, item] of entries) {
+          this.cancelListen(item);
+        }
+        return;
       }
     }
   }
