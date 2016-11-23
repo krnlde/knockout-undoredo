@@ -11,6 +11,7 @@ import eslint from 'gulp-eslint';
 import git from 'gulp-git';
 import test from 'gulp-mocha';
 import notify from 'gulp-notify';
+import nsp from 'gulp-nsp';
 import rename from 'gulp-rename';
 import uglify from 'gulp-uglify';
 import gutil from 'gulp-util';
@@ -59,10 +60,14 @@ gulp.task('lint', () =>
 
 gulp.task('test', () =>
   gulp.src('./test/*')
-    .pipe(test({reporter: 'base'}))
+    .pipe(test({reporter: 'spec'}))
 );
 
-gulp.task('build', ['lint', 'test'], () =>
+gulp.task('security-checkup', (cb) => {
+  nsp({package: __dirname + '/package.json'}, cb);
+});
+
+gulp.task('build', ['lint', 'security-checkup', 'test'], () =>
   gulp.src('index.js')
     .pipe(rename('knockout-undoredo.js'))
     .pipe(babel())

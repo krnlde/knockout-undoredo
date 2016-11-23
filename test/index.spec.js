@@ -3,13 +3,6 @@ import {expect} from 'chai';
 
 import UndoManager from '../index';
 
-class ViewModel {
-  name       = ko.observable('Obama');
-  birthday   = ko.observable(new Date(1961, 7, 4));
-  occupation = ko.observable('President of the United States');
-  age        = ko.pureComputed(() => (new Date()).getUTCFullYear() - this.birthday().getUTCFullYear());
-}
-
 function waitFor(timeout) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
 }
@@ -19,14 +12,15 @@ describe('Knockout Undo Manager', () => {
   let viewModel;
   let undomanager;
 
-  before(() => {
-    viewModel = new ViewModel();
-  });
-
   describe('Instatiation', () => {
 
+    before(() => {
+      viewModel = {
+        name: ko.observable('Obama')
+      };
+    });
+
     beforeEach(() => {
-      viewModel.name('Obama');
       undomanager = new UndoManager(viewModel);
     });
     afterEach(() => undomanager.destroy());
@@ -51,7 +45,9 @@ describe('Knockout Undo Manager', () => {
     const steps = 3;
 
     beforeEach(() => {
-      viewModel.name('Obama');
+      viewModel = {
+        name: ko.observable('Obama')
+      };
       undomanager = new UndoManager(viewModel, {steps: steps, throttle: 0});
     });
     afterEach(() => undomanager.destroy());
@@ -89,14 +85,15 @@ describe('Knockout Undo Manager', () => {
       undomanager.undo();
       expect(viewModel.name()).to.equal('One');
     });
-
   });
 
   describe('Undo: Asynchonrous', () => {
     const throttle = 50;
 
     beforeEach(() => {
-      viewModel.name('Obama');
+      viewModel = {
+        name: ko.observable('Obama')
+      };
       undomanager = new UndoManager(viewModel, {steps: 3, throttle: throttle});
     });
     afterEach(() => undomanager.destroy());
@@ -125,6 +122,34 @@ describe('Knockout Undo Manager', () => {
       viewModel.name('Six');
       undomanager.undo();
       expect(viewModel.name()).to.equal('Four');
+    });
+  });
+
+  describe('Garbage Collection', () => {
+
+    beforeEach(() => {
+      viewModel = {
+        names: ko.observableArray([
+          ko.observable('Obama'),
+          ko.observable('Clinton'),
+          ko.observable('Trump'),
+        ]),
+      };
+      undomanager = new UndoManager(viewModel);
+    });
+
+    it('should initially have 4 subscriptions', () => {
+      expect(undomanager._subscriptions.length).to.equal(4);
+    });
+
+    it('should remove listeners when array items are deleted', () => {
+      viewModel.names.pop();
+      expect(undomanager._subscriptions.length).to.equal(3);
+    });
+
+    it('should add listeners when array items are added', () => {
+      viewModel.names.push(ko.observable('Sanders'));
+      expect(undomanager._subscriptions.length).to.equal(5);
     });
 
   });
