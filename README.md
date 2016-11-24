@@ -14,6 +14,8 @@ Generic undo/redo history-management for knockout observables.
 
 ## Usage
 
+**Heads up:** knockout-undoredo is only available via npm, thus it expects to be run in an node.js environment with `require()` and everything. If you want to use it in the browser you'll have to browserify the final code.
+
 ```js
 import ko from 'knockout';
 import UndoManager from 'knockout-undoredo';
@@ -63,9 +65,30 @@ console.log(vm.message()); // Thanks Obama
 
 ## Constructor Options
 
-<dl>
-  <dt>`throttle`: Integer (Default: 300)</dt>
-  <dd>Timeout in which changes will be collected into a changeset</dd>
-  <dt>`steps`: Integer (Default: 30)</dt>
-  <dd>Stack size for undoable/redoable changes</dd>
-</dl>
+| Prop       | Type                 | Default | Description |
+| ---------- | -------------------- | ------- |------------ |
+| `throttle` | <code>integer</code> | `300`   | Timeout in which changes will be collected into a changeset |
+| `steps`    | <code>integer</code> | `30`    | Stack size for undoable/redoable changes |
+
+## Skipping observables
+
+By default all enumerable properties of an object will be subscribed to. If you want to skip a knockout obersvable you can modify the object's `enumerable` property:
+
+```javascript
+Object.defineProperty(obj, 'key', {
+  enumerable: false,
+});
+```
+
+If you are one of the lucky guys who can make use of ES2016+ features in your code (i.e. through babel) you can simply import the `nonenumerable` decorator from the `core-decorators` module.
+
+```javascript
+import {nonenumerable} from 'core-decorators';
+
+class Example {
+    @nonenumerable
+    unobserved = ko.observable();
+}
+```
+
+That way you can still explicitly reference the variable in your code, but it won't be collected by `for`-loops and `Object.keys`, `Object.values` or `Object.entries` respectively. Remember that it'll still be visible to `Object.getOwnPropertyNames`!
