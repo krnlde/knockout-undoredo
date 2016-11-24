@@ -36,7 +36,8 @@ export default class UndoManager {
    */
   changeset = [];
 
-  _subscriptions = [];
+  _subscriptions = new WeakMap();
+  _subscriptionsCount = 0;
   recording = null;
   _ignoreChanges = false;
 
@@ -48,6 +49,7 @@ export default class UndoManager {
 
   startListening(vm) {
     if (this.isUndoable(vm)) {
+      if (this._subscriptions.has(vm)) return;
       const observable = vm;
       let previousValue = observable.peek();
 
@@ -56,52 +58,44 @@ export default class UndoManager {
 
         const subscription = observable.subscribe((changes) => {
           let nextValue = changes.reduce((subject, change) => {
-            log('- Array Event:', change.status);
+            subject = [...subject];
             switch (change.status) {
               case 'added':
                 this.startListening(change.value);
-                log('Start listening to', ko.unwrap(change.value).toString(), this._subscriptions.length, 'listeners');
-                subject = [...subject];
-                subject.splice(change.index, 0, change.value)
+                subject.splice(change.index, 0, change.value);
                 return subject;
               case 'deleted':
-                this.stopListening(change.value);
-                log('Stop listening to', ko.unwrap(change.value).toString(), this._subscriptions.length, 'listeners');
-                subject = [...subject];
                 subject.splice(change.index, 1);
+                this.stopListening(change.value);
                 return subject;
               default:
-                return [...subject];
+                return subject;
             }
-          }, [...previousValue]);
+          }, previousValue);
 
           this.onChange({observable, nextValue, previousValue});
-          previousValue = [...nextValue];
+          previousValue = nextValue;
         }, null, 'arrayChange');
 
-        this._subscriptions.push(subscription);
-        // log('Added [array]', this._subscriptions.length, 'listeners')
+        this._subscriptions.set(vm, subscription);
+        this._subscriptionsCount++;
 
-        this.startListening(previousValue);
+        previousValue.forEach((item) => this.startListening(item));
       } else {
         const subscription = observable.subscribe((nextValue) => {
           this.onChange({observable, nextValue, previousValue});
           previousValue = nextValue;
         });
-        this._subscriptions.push(subscription);
-        // log('Added', observable.peek(), this._subscriptions.length, 'listeners');
+        this._subscriptions.set(vm, subscription);
+        this._subscriptionsCount++;
       }
-      return;
-    }
-
-    if (typeof vm === 'object') {
+    } else if (typeof vm === 'object') {
       const items = Object.values(vm);
 
       if (items.length) {
         for (let item of items) {
           this.startListening(item);
         }
-        return;
       }
     }
   }
@@ -111,14 +105,12 @@ export default class UndoManager {
       const observable = vm;
       const previousValue = observable.peek();
 
-      this._subscriptions = this._subscriptions.reduce((reduced, subscription) => {
-        if (subscription._target === observable) {
-          subscription.dispose();
-        } else {
-          reduced.push(subscription);
-        }
-        return reduced;
-      }, []);
+      if (this._subscriptions.has(observable)) {
+        this._subscriptions.get(observable).dispose();
+        this._subscriptions.delete(observable);
+        this._subscriptionsCount--;
+
+      }
 
       if (Array.isArray(previousValue)) {
         this.stopListening(previousValue);
@@ -140,17 +132,20 @@ export default class UndoManager {
 
   takeSnapshot() {
     clearTimeout(this.recording);
-    this.past = this.past.slice(-this.steps);
+    const waste = this.past.splice(0, this.past.length - this.steps);
+
+    // // Garbage Collection
+    // if (waste.length) {
+    //   this.stopListening(waste);
+    // }
+
     this.future = [];
     this.changeset = [];
     this.recording = null;
-    log('BEGIN NEW CHANGESET');
-    log(this.past.length, 'items in history');
   }
 
   onChange({observable, nextValue, previousValue}) {
     if (this._ignoreChanges) return;
-    log('CHANGE REGISTERED');
     if (this.recording) clearTimeout(this.recording); // reset timeout
     else this.past.push(this.changeset); // push the changeset immediatelly
 
@@ -164,8 +159,8 @@ export default class UndoManager {
   destroy() {
     this.past = [];
     this.future = [];
-    this._subscriptions.forEach((subscription) => subscription.dispose());
-    this._subscriptions = [];
+    // this._subscriptions.forEach((subscription) => subscription.dispose());
+    // this._subscriptions = [];
   }
 
   undo() {
@@ -179,7 +174,6 @@ export default class UndoManager {
 
     this._ignoreChanges = true;
 
-    log(present.length, 'steps');
     present.reverse().forEach(({observable, previousValue}) => {
       if (Array.isArray(previousValue)) {
         const targetArray = [...observable.peek()];
@@ -200,7 +194,7 @@ export default class UndoManager {
       }
     });
 
-    this._ignoreChanges = false;
+    setTimeout(() => this._ignoreChanges = false);
   }
 
   redo() {
@@ -214,7 +208,6 @@ export default class UndoManager {
 
     this._ignoreChanges = true;
 
-    log('Changeset contains steps:', present.length);
     present.reverse().forEach(({observable, nextValue}) => {
       if (Array.isArray(nextValue)) {
         const targetArray = [...observable.peek()]; // clone
@@ -236,7 +229,7 @@ export default class UndoManager {
       }
     });
 
-    this._ignoreChanges = false;
+    setTimeout(() => this._ignoreChanges = false);
   }
 
   isUndoable(vm) {
