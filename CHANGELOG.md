@@ -1,3 +1,13 @@
+<a name="1.0.9"></a>
+## [1.0.9](https://github.com/krnlde/knockout-undoredo/compare/v1.0.8...v1.0.9) (2016-11-24)
+
+
+### Features
+
+* **core:** Complex objects are handled well, proper garbage collection through WeakMaps. ([ac5b5ec](https://github.com/krnlde/knockout-undoredo/commit/ac5b5ec))
+
+
+
 <a name="1.0.8"></a>
 ## [1.0.8](https://github.com/krnlde/knockout-undoredo/compare/v1.0.7...v1.0.8) (2016-11-24)
 
