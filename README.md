@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/krnlde/knockout-undoredo.svg?branch=master)](https://travis-ci.org/krnlde/knockout-undoredo)
 [![Dependency Status](https://david-dm.org/krnlde/knockout-undoredo.svg)](https://david-dm.org/krnlde/knockout-undoredo)
 [![devDependency Status](https://david-dm.org/krnlde/knockout-undoredo/dev-status.svg?theme=shields.io)](https://david-dm.org/krnlde/knockout-undoredo#info=devDependencies)
+[![Known Vulnerabilities](https://snyk.io/test/github/krnlde/knockout-undoredo/badge.svg)](https://snyk.io/test/github/krnlde/knockout-undoredo)
 
 # Knockout Undo-Redo
 Generic undo/redo history-management for knockout observables.
