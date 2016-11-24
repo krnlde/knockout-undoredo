@@ -153,33 +153,33 @@ describe('Knockout Undo Manager', () => {
     afterEach(() => undomanager.destroy());
 
     it('should initially have 4 subscriptions', () => {
-      expect(undomanager._subscriptions.length).to.equal(4);
+      expect(undomanager._subscriptionsCount).to.equal(4);
     });
 
     it('should remove listeners when array items are deleted', () => {
       viewModel.names.pop();
-      expect(undomanager._subscriptions.length).to.equal(3);
+      expect(undomanager._subscriptionsCount).to.equal(3);
 
       undomanager.undo();
 
-      expect(undomanager._subscriptions.length).to.equal(4);
+      expect(undomanager._subscriptionsCount).to.equal(4);
 
       undomanager.redo();
 
-      expect(undomanager._subscriptions.length).to.equal(3);
+      expect(undomanager._subscriptionsCount).to.equal(3);
     });
 
     it('should add listeners when array items are added', () => {
       viewModel.names.push(ko.observable('Sanders'));
-      expect(undomanager._subscriptions.length).to.equal(5);
+      expect(undomanager._subscriptionsCount).to.equal(5);
 
       undomanager.undo();
 
-      expect(undomanager._subscriptions.length).to.equal(4);
+      expect(undomanager._subscriptionsCount).to.equal(4);
 
       undomanager.redo();
 
-      expect(undomanager._subscriptions.length).to.equal(5);
+      expect(undomanager._subscriptionsCount).to.equal(5);
     });
   });
 
@@ -215,42 +215,42 @@ describe('Knockout Undo Manager', () => {
       tree.branches.push(longBranch);
       tree.branches.push(new Branch());
 
-      expect(undomanager._subscriptions.length).to.equal(7);
+      expect(undomanager._subscriptionsCount).to.equal(7);
 
       undomanager.undo();
 
-      expect(undomanager._subscriptions.length).to.equal(1);
+      expect(undomanager._subscriptionsCount).to.equal(1);
 
       undomanager.redo();
 
-      expect(undomanager._subscriptions.length).to.equal(7);
+      expect(undomanager._subscriptionsCount).to.equal(7);
     });
 
-    // it('should handle deleting complex structures', () => {
-    //   const leafBranch = new Branch();
-    //   leafBranch.branches.splice(leafBranch.branches().length, 0, new Leaf(), new Leaf());
-    //   tree.branches.push(leafBranch);
+    it('should handle deleting complex structures', () => {
+      const leafBranch = new Branch();
+      leafBranch.branches.splice(leafBranch.branches().length, 0, new Leaf(), new Leaf());
+      tree.branches.push(leafBranch);
 
-    //   const longBranch = new Branch();
-    //   longBranch.branches.splice(longBranch.branches().length, 0, new Branch());
-    //   tree.branches.push(longBranch);
-    //   tree.branches.push(new Branch());
+      const longBranch = new Branch();
+      longBranch.branches.splice(longBranch.branches().length, 0, new Branch());
+      tree.branches.push(longBranch);
+      tree.branches.push(new Branch());
 
-    //   undomanager.takeSnapshot();
+      undomanager.takeSnapshot();
 
-    //   expect(undomanager._subscriptions.length).to.equal(7);
+      expect(undomanager._subscriptionsCount).to.equal(7);
 
-    //   tree.branches.removeAll();
-    //   expect(undomanager._subscriptions.length).to.equal(1);
+      tree.branches.removeAll();
+      expect(undomanager._subscriptionsCount).to.equal(1);
 
-    //   undomanager.undo();
+      undomanager.undo();
 
-    //   expect(undomanager._subscriptions.length).to.equal(7);
+      expect(undomanager._subscriptionsCount).to.equal(7);
 
-    //   undomanager.redo();
+      undomanager.redo();
 
-    //   expect(undomanager._subscriptions.length).to.equal(1);
-    // });
+      expect(undomanager._subscriptionsCount).to.equal(1);
+    });
 
     it('should handle deeply nested structures', () => {
       let branch = tree;
@@ -261,15 +261,34 @@ describe('Knockout Undo Manager', () => {
         branch = nextBranch;
       }
       branch.branches.splice(branch.branches().length, 0, new Leaf(), new Leaf(), new Leaf(), new Leaf());
-      expect(undomanager._subscriptions.length).to.equal(depth + 5);
+      expect(undomanager._subscriptionsCount).to.equal(depth + 5);
 
       undomanager.undo();
 
-      expect(undomanager._subscriptions.length).to.equal(1);
+      expect(undomanager._subscriptionsCount).to.equal(1);
 
       undomanager.redo();
 
-      expect(undomanager._subscriptions.length).to.equal(depth + 5);
+      expect(undomanager._subscriptionsCount).to.equal(depth + 5);
     });
+
   });
+
+  describe('Github issues', () => {
+
+    it('#3 - Crashes on circular references', () => {
+      const undomanager = new UndoManager();
+
+      let semiCircleA = ko.observableArray();
+      let semiCircleB = ko.observableArray();
+
+      // Creating the circular reference here:
+      semiCircleA.push(semiCircleB);
+      semiCircleB.push(semiCircleA);
+
+      undomanager.startListening(semiCircleA);
+
+      undomanager.destroy()
+    });
+  })
 });

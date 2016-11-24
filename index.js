@@ -57,15 +57,17 @@ export default class UndoManager {
         previousValue = [...previousValue]; // clone
 
         const subscription = observable.subscribe((changes) => {
+
+          let offset = 0;
           let nextValue = changes.reduce((subject, change) => {
             subject = [...subject];
             switch (change.status) {
               case 'added':
                 this.startListening(change.value);
-                subject.splice(change.index, 0, change.value);
+                subject.splice(change.index + offset++, 0, change.value);
                 return subject;
               case 'deleted':
-                subject.splice(change.index, 1);
+                subject.splice(change.index + offset--, 1);
                 this.stopListening(change.value);
                 return subject;
               default:
