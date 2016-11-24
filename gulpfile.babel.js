@@ -7,17 +7,20 @@ import gulp from 'gulp';
 import babel from 'gulp-babel';
 import bump from 'gulp-bump';
 import changelog from 'gulp-conventional-changelog';
+import connect from 'gulp-connect';
 import eslint from 'gulp-eslint';
 import git from 'gulp-git';
 import test from 'gulp-mocha';
 import notify from 'gulp-notify';
 import nsp from 'gulp-nsp';
+import open from 'gulp-open';
 import rename from 'gulp-rename';
 import uglify from 'gulp-uglify';
 import gutil from 'gulp-util';
 
+const argv = minimist(process.argv.slice(2));
+
 gulp.task('bump-version', () => {
-  const argv = minimist(process.argv.slice(2));
   let type;
   if (argv.major)      type = 'major';
   else if (argv.minor) type = 'minor';
@@ -52,22 +55,26 @@ gulp.task('create-new-tag', (cb) => {
 });
 
 gulp.task('lint', () =>
-  gulp.src('./index.js')
+  gulp.src(['./index.js', './test/index.spec.js'])
     .pipe(eslint())
     .pipe(eslint.format())
     .pipe(eslint.failAfterError())
 );
 
-gulp.task('test', () =>
-  gulp.src('./test/*')
-    .pipe(test({reporter: 'spec'}))
-);
+gulp.task('test', () => {
+  if (argv['skip-tests']) return gutil.log('Tests skipped via --skip-tests argument');
+
+  return gulp.src('./test/*')
+    .pipe(test({reporter: 'spec'}));
+});
 
 gulp.task('security-checkup', (cb) => {
   nsp({package: __dirname + '/package.json'}, cb);
 });
 
-gulp.task('build', ['lint', 'security-checkup', 'test'], () =>
+gulp.task('full-checkup', ['lint', 'security-checkup', 'test']);
+
+gulp.task('build', ['full-checkup'], () =>
   gulp.src('index.js')
     .pipe(rename('knockout-undoredo.js'))
     .pipe(babel())
@@ -77,6 +84,17 @@ gulp.task('build', ['lint', 'security-checkup', 'test'], () =>
     .pipe(rename({suffix: '.min'}))
     .pipe(gulp.dest('dist'))
 );
+
+gulp.task('serve-demo', () => {
+  connect.server({
+    port: 8888,
+    root: '.'
+  });
+  gulp.src(__filename)
+    .pipe(open({
+      uri: 'http://localhost:8888/demo/'
+    }));
+});
 
 gulp.task('do-release', (done) =>
   sequence(
