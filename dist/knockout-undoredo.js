@@ -4,17 +4,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _slicedToArray2 = require('babel-runtime/helpers/slicedToArray');
-
-var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
-
 var _getIterator2 = require('babel-runtime/core-js/get-iterator');
 
 var _getIterator3 = _interopRequireDefault(_getIterator2);
 
-var _entries = require('babel-runtime/core-js/object/entries');
+var _values = require('babel-runtime/core-js/object/values');
 
-var _entries2 = _interopRequireDefault(_entries);
+var _values2 = _interopRequireDefault(_values);
 
 var _typeof2 = require('babel-runtime/helpers/typeof');
 
@@ -69,12 +65,12 @@ var UndoManager = function () {
     this.throttle = 300;
     this.undoCollection = [];
     this._subscriptions = [];
-    this._batchTimeout = null;
+    this.recording = null;
     this._ignoreChanges = false;
 
-    this.MAX_UNDO_STEPS = steps;
+    this.steps = steps;
     this.throttle = throttle;
-    this.listen(vm);
+    this.startListening(vm);
   }
 
   /**
@@ -90,11 +86,11 @@ var UndoManager = function () {
 
 
   (0, _createClass3.default)(UndoManager, [{
-    key: 'listen',
-    value: function listen(vm) {
+    key: 'startListening',
+    value: function startListening(vm) {
       var _this = this;
 
-      if (_knockout2.default.isWritableObservable(vm) && !_knockout2.default.isComputed(vm) && _knockout2.default.isSubscribable(vm)) {
+      if (this.isUndoable(vm)) {
         var _ret = function () {
           var observable = vm;
           var currentValue = observable.peek();
@@ -102,7 +98,7 @@ var UndoManager = function () {
           if (Array.isArray(currentValue)) {
             currentValue = [].concat((0, _toConsumableArray3.default)(currentValue)); // clone
 
-            _this.listen(currentValue);
+            _this.startListening(currentValue);
 
             var subscription = observable.subscribe(function (changes) {
               var nextValue = void 0;
@@ -110,11 +106,11 @@ var UndoManager = function () {
                 switch (change.status) {
                   case 'added':
                     nextValue = currentValue.splice(change.index, 0, change.value);
-                    _this.listen(change.value);
+                    _this.startListening(change.value);
                     break;
                   case 'deleted':
                     nextValue = currentValue.splice(change.index, 1);
-                    _this.cancelListen(change.value);
+                    _this.stopListening(change.value);
                     break;
                 }
               });
@@ -139,20 +135,18 @@ var UndoManager = function () {
       }
 
       if ((typeof vm === 'undefined' ? 'undefined' : (0, _typeof3.default)(vm)) === 'object') {
-        var entries = (0, _entries2.default)(vm);
+        var items = (0, _values2.default)(vm);
 
-        if (entries.length) {
+        if (items.length) {
           var _iteratorNormalCompletion = true;
           var _didIteratorError = false;
           var _iteratorError = undefined;
 
           try {
-            for (var _iterator = (0, _getIterator3.default)(entries), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-              var _step$value = (0, _slicedToArray3.default)(_step.value, 2),
-                  key = _step$value[0],
-                  item = _step$value[1];
+            for (var _iterator = (0, _getIterator3.default)(items), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+              var item = _step.value;
 
-              this.listen(item);
+              this.startListening(item);
             }
           } catch (err) {
             _didIteratorError = true;
@@ -174,11 +168,11 @@ var UndoManager = function () {
       }
     }
   }, {
-    key: 'cancelListen',
-    value: function cancelListen(vm) {
+    key: 'stopListening',
+    value: function stopListening(vm) {
       var _this2 = this;
 
-      if (_knockout2.default.isWritableObservable(vm) && !_knockout2.default.isComputed(vm) && _knockout2.default.isSubscribable(vm)) {
+      if (this.isUndoable(vm)) {
         var _ret2 = function () {
           var observable = vm;
           var currentValue = observable.peek();
@@ -193,7 +187,7 @@ var UndoManager = function () {
           }, []);
 
           if (Array.isArray(currentValue)) {
-            _this2.cancelListen(currentValue);
+            _this2.stopListening(currentValue);
           }
           return {
             v: void 0
@@ -204,21 +198,18 @@ var UndoManager = function () {
       }
 
       if ((typeof vm === 'undefined' ? 'undefined' : (0, _typeof3.default)(vm)) === 'object') {
-        var entries = (0, _entries2.default)(vm);
+        var items = (0, _values2.default)(vm);
 
-        if (entries.length) {
-          console.log('is enumerable');
+        if (items.length) {
           var _iteratorNormalCompletion2 = true;
           var _didIteratorError2 = false;
           var _iteratorError2 = undefined;
 
           try {
-            for (var _iterator2 = (0, _getIterator3.default)(entries), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-              var _step2$value = (0, _slicedToArray3.default)(_step2.value, 2),
-                  key = _step2$value[0],
-                  item = _step2$value[1];
+            for (var _iterator2 = (0, _getIterator3.default)(items), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+              var item = _step2.value;
 
-              this.cancelListen(item);
+              this.stopListening(item);
             }
           } catch (err) {
             _didIteratorError2 = true;
@@ -249,19 +240,20 @@ var UndoManager = function () {
           previousValue = _ref2.previousValue;
 
       if (this._ignoreChanges) return;
-      if (this._batchTimeout) clearTimeout(this._batchTimeout);else this.past.push(this.undoCollection);
+
+      if (this.recording) clearTimeout(this.recording);else this.past.push(this.undoCollection);
 
       var atomicChange = { observable: observable, nextValue: nextValue, previousValue: previousValue };
       this.undoCollection.push(atomicChange);
 
       var afterCollecting = function afterCollecting() {
-        _this3.past = _this3.past.slice(-_this3.MAX_UNDO_STEPS);
+        _this3.past = _this3.past.slice(-_this3.steps);
         _this3.future = [];
         _this3.undoCollection = [];
-        _this3._batchTimeout = null;
+        _this3.recording = null;
       };
 
-      if (this.throttle) this._batchTimeout = setTimeout(afterCollecting, this.throttle);else afterCollecting();
+      if (this.throttle) this.recording = setTimeout(afterCollecting, this.throttle);else afterCollecting();
     }
   }, {
     key: 'destroy',
@@ -279,9 +271,9 @@ var UndoManager = function () {
       var _this4 = this;
 
       if (!this.past.length) return;
-      if (this._batchTimeout) {
-        clearTimeout(this._batchTimeout);
-        this._batchTimeout = null;
+      if (this.recording) {
+        clearTimeout(this.recording);
+        this.recording = null;
       }
       var present = this.past.pop();
       this.future.push(present);
@@ -298,12 +290,14 @@ var UndoManager = function () {
               previousValue.forEach(function (item) {
                 if (targetArray.includes(item)) return;
                 observable.push(item);
+                _this4.startListening(item);
               });
             }
             if (previousValue.length < targetArray.length) {
               targetArray.forEach(function (item) {
                 if (previousValue.includes(item)) return;
                 observable.remove(item);
+                _this4.stopListening(item);
               });
             }
           })();
@@ -322,9 +316,9 @@ var UndoManager = function () {
       var _this5 = this;
 
       if (!this.future.length) return;
-      if (this._batchTimeout) {
-        clearTimeout(this._batchTimeout);
-        this._batchTimeout = null;
+      if (this.recording) {
+        clearTimeout(this.recording);
+        this.recording = null;
       }
       var present = this.future.pop();
       this.past.push(present);
@@ -341,12 +335,14 @@ var UndoManager = function () {
               nextValue.forEach(function (item) {
                 if (targetArray.includes(item)) return;
                 observable.push(item);
+                _this5.startListening(item);
               });
             }
             if (nextValue.length < targetArray.length) {
               targetArray.forEach(function (item) {
                 if (nextValue.includes(item)) return;
                 observable.remove(item);
+                _this5.stopListening(item);
               });
             }
           })();
@@ -358,6 +354,11 @@ var UndoManager = function () {
         return _this5._ignoreChanges = false;
       });
       // console.log({past: this.past.length, future: this.future.length});
+    }
+  }, {
+    key: 'isUndoable',
+    value: function isUndoable(vm) {
+      return _knockout2.default.isWritableObservable(vm) && !_knockout2.default.isComputed(vm) && _knockout2.default.isSubscribable(vm);
     }
   }]);
   return UndoManager;

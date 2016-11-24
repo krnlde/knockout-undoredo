@@ -5,7 +5,7 @@ export default class UndoManager {
    * Determins how many undo/redo steps will be stored in memory.
    * @type {Number}
    */
-  MAX_UNDO_STEPS;
+  steps;
 
   /**
    * Stack for past state snapshots
@@ -34,24 +34,24 @@ export default class UndoManager {
   undoCollection = [];
 
   _subscriptions = [];
-  _batchTimeout = null;
+  recording = null;
   _ignoreChanges = false;
 
   constructor(vm, {steps = 30, throttle = 300} = {}) {
-    this.MAX_UNDO_STEPS = steps;
-    this.throttle       = throttle;
-    this.listen(vm);
+    this.steps    = steps;
+    this.throttle = throttle;
+    this.startListening(vm);
   }
 
-  listen(vm) {
-    if (ko.isWritableObservable(vm) && !ko.isComputed(vm) && ko.isSubscribable(vm)) {
+  startListening(vm) {
+    if (this.isUndoable(vm)) {
       const observable = vm;
       let currentValue = observable.peek();
 
       if (Array.isArray(currentValue)) {
         currentValue = [...currentValue]; // clone
 
-        this.listen(currentValue);
+        this.startListening(currentValue);
 
         const subscription = observable.subscribe((changes) => {
           let nextValue;
@@ -59,11 +59,11 @@ export default class UndoManager {
             switch (change.status) {
               case 'added':
                 nextValue = currentValue.splice(change.index, 0, change.value);
-                this.listen(change.value);
+                this.startListening(change.value);
                 break;
               case 'deleted':
                 nextValue = currentValue.splice(change.index, 1);
-                this.cancelListen(change.value);
+                this.stopListening(change.value);
                 break;
             }
           });
@@ -83,19 +83,19 @@ export default class UndoManager {
     }
 
     if (typeof vm === 'object') {
-      const entries = Object.entries(vm);
+      const items = Object.values(vm);
 
-      if (entries.length) {
-        for (let [key, item] of entries) {
-          this.listen(item);
+      if (items.length) {
+        for (let item of items) {
+          this.startListening(item);
         }
         return;
       }
     }
   }
 
-  cancelListen(vm) {
-    if (ko.isWritableObservable(vm) && !ko.isComputed(vm) && ko.isSubscribable(vm)) {
+  stopListening(vm) {
+    if (this.isUndoable(vm)) {
       const observable = vm;
       const currentValue = observable.peek();
 
@@ -109,18 +109,17 @@ export default class UndoManager {
       }, []);
 
       if (Array.isArray(currentValue)) {
-        this.cancelListen(currentValue);
+        this.stopListening(currentValue);
       }
       return;
     }
 
     if (typeof vm === 'object') {
-      const entries = Object.entries(vm);
+      const items = Object.values(vm);
 
-      if (entries.length) {
-        console.log('is enumerable');
-        for (let [key, item] of entries) {
-          this.cancelListen(item);
+      if (items.length) {
+        for (let item of items) {
+          this.stopListening(item);
         }
         return;
       }
@@ -129,20 +128,21 @@ export default class UndoManager {
 
   change({observable, nextValue, previousValue}) {
     if (this._ignoreChanges) return;
-    if (this._batchTimeout) clearTimeout(this._batchTimeout);
+
+    if (this.recording) clearTimeout(this.recording);
     else this.past.push(this.undoCollection);
 
     const atomicChange = {observable, nextValue, previousValue};
     this.undoCollection.push(atomicChange);
 
     const afterCollecting = () => {
-      this.past = this.past.slice(-this.MAX_UNDO_STEPS);
+      this.past = this.past.slice(-this.steps);
       this.future = [];
       this.undoCollection = [];
-      this._batchTimeout = null;
+      this.recording = null;
     }
 
-    if (this.throttle) this._batchTimeout = setTimeout(afterCollecting, this.throttle);
+    if (this.throttle) this.recording = setTimeout(afterCollecting, this.throttle);
     else afterCollecting();
   }
 
@@ -155,9 +155,9 @@ export default class UndoManager {
 
   undo() {
     if (!this.past.length) return;
-    if (this._batchTimeout) {
-      clearTimeout(this._batchTimeout);
-      this._batchTimeout = null;
+    if (this.recording) {
+      clearTimeout(this.recording);
+      this.recording = null;
     }
     const present = this.past.pop();
     this.future.push(present);
@@ -170,12 +170,14 @@ export default class UndoManager {
           previousValue.forEach((item) => {
             if (targetArray.includes(item)) return;
             observable.push(item);
+            this.startListening(item);
           });
         }
         if (previousValue.length < targetArray.length) {
           targetArray.forEach((item) => {
             if (previousValue.includes(item)) return;
             observable.remove(item);
+            this.stopListening(item);
           });
         }
       } else {
@@ -188,9 +190,9 @@ export default class UndoManager {
 
   redo() {
     if (!this.future.length) return;
-    if (this._batchTimeout) {
-      clearTimeout(this._batchTimeout);
-      this._batchTimeout = null;
+    if (this.recording) {
+      clearTimeout(this.recording);
+      this.recording = null;
     }
     const present = this.future.pop();
     this.past.push(present);
@@ -203,12 +205,14 @@ export default class UndoManager {
           nextValue.forEach((item) => {
             if (targetArray.includes(item)) return;
             observable.push(item);
+            this.startListening(item);
           });
         }
         if (nextValue.length < targetArray.length) {
           targetArray.forEach((item) => {
             if (nextValue.includes(item)) return;
             observable.remove(item);
+            this.stopListening(item);
           });
         }
       } else {
@@ -219,4 +223,7 @@ export default class UndoManager {
     // console.log({past: this.past.length, future: this.future.length});
   }
 
+  isUndoable(vm) {
+    return ko.isWritableObservable(vm) && !ko.isComputed(vm) && ko.isSubscribable(vm);
+  }
 }
