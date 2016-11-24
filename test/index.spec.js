@@ -138,6 +138,8 @@ describe('Knockout Undo Manager', () => {
       undomanager = new UndoManager(viewModel);
     });
 
+    afterEach(() => undomanager.destroy());
+
     it('should initially have 4 subscriptions', () => {
       expect(undomanager._subscriptions.length).to.equal(4);
     });
@@ -145,12 +147,113 @@ describe('Knockout Undo Manager', () => {
     it('should remove listeners when array items are deleted', () => {
       viewModel.names.pop();
       expect(undomanager._subscriptions.length).to.equal(3);
+
+      undomanager.undo();
+
+      expect(undomanager._subscriptions.length).to.equal(4);
+
+      undomanager.redo();
+
+      expect(undomanager._subscriptions.length).to.equal(3);
     });
 
     it('should add listeners when array items are added', () => {
       viewModel.names.push(ko.observable('Sanders'));
       expect(undomanager._subscriptions.length).to.equal(5);
+
+      undomanager.undo();
+
+      expect(undomanager._subscriptions.length).to.equal(4);
+
+      undomanager.redo();
+
+      expect(undomanager._subscriptions.length).to.equal(5);
+    });
+  });
+
+  describe('Complex structures', () => {
+
+    class Tree { // Adds 1 listener
+      branches = ko.observableArray([]);
+    }
+
+    class Branch extends Tree { // Adds 1 listener
+    }
+
+    class Leaf { // Adds 1 listener
+      name = ko.observable();
+    }
+
+    let tree;
+
+    beforeEach(() => {
+      tree = new Tree();
+      undomanager = new UndoManager(tree);
     });
 
+    afterEach(() => undomanager.destroy());
+
+    it('should handle adding complex structures', () => {
+      const leafBranch = new Branch();
+      leafBranch.branches.splice(leafBranch.branches().length, 0, new Leaf(), new Leaf());
+      tree.branches.push(leafBranch);
+
+      const longBranch = new Branch();
+      longBranch.branches.splice(longBranch.branches().length, 0, new Branch());
+      tree.branches.push(longBranch);
+      tree.branches.push(new Branch());
+
+      expect(undomanager._subscriptions.length).to.equal(7);
+
+      undomanager.undo();
+
+      expect(undomanager._subscriptions.length).to.equal(1);
+
+      undomanager.redo();
+
+      expect(undomanager._subscriptions.length).to.equal(7);
+    });
+
+    it('should handle deleting complex structures', () => {
+      const leafBranch = new Branch();
+      leafBranch.branches.splice(leafBranch.branches().length, 0, new Leaf(), new Leaf());
+      tree.branches.push(leafBranch);
+
+      const longBranch = new Branch();
+      longBranch.branches.splice(longBranch.branches().length, 0, new Branch());
+      tree.branches.push(longBranch);
+      tree.branches.push(new Branch());
+
+      tree.branches.removeAll();
+      expect(undomanager._subscriptions.length).to.equal(1);
+
+      undomanager.undo();
+
+      expect(undomanager._subscriptions.length).to.equal(7);
+
+      undomanager.redo();
+
+      expect(undomanager._subscriptions.length).to.equal(1);
+    });
+
+    it('should handle deeply nested structures', () => {
+      let branch = tree;
+      const depth = 50;
+      for (let i = 0; i < depth; i += 1) {
+        const nextBranch = new Branch();
+        branch.branches.push(nextBranch);
+        branch = nextBranch;
+      }
+      branch.branches.splice(branch.branches().length, 0, new Leaf(), new Leaf(), new Leaf(), new Leaf());
+      expect(undomanager._subscriptions.length).to.equal(depth + 5);
+
+      undomanager.undo();
+
+      expect(undomanager._subscriptions.length).to.equal(1);
+
+      undomanager.redo();
+
+      expect(undomanager._subscriptions.length).to.equal(depth + 5);
+    });
   });
 });

@@ -2,13 +2,13 @@
   "parser": "babel-eslint",
   "env": {
     "browser": true,
-    "node": true
+    "node": true,
+    "es6": true
   },
   "extends": "eslint:recommended",
   "rules": {
     "strict": [2, "global"],
     "indent": ["error", 2, {"SwitchCase": 1}],
-    "no-unused-expressions": 1,
     "no-unused-labels": 1,
     "no-unused-vars": 1,
     "no-console": 1,
