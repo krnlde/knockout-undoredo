@@ -75,7 +75,7 @@ export default class UndoManager {
             }
           }, [...previousValue]);
 
-          this.change({observable, nextValue, previousValue});
+          this.onChange({observable, nextValue, previousValue});
           previousValue = [...nextValue];
         }, null, 'arrayChange');
 
@@ -85,7 +85,7 @@ export default class UndoManager {
         this.startListening(previousValue);
       } else {
         const subscription = observable.subscribe((nextValue) => {
-          this.change({observable, nextValue, previousValue});
+          this.onChange({observable, nextValue, previousValue});
           previousValue = nextValue;
         });
         this._subscriptions.push(subscription);
@@ -148,7 +148,7 @@ export default class UndoManager {
     log(this.past.length, 'items in history');
   }
 
-  change({observable, nextValue, previousValue}) {
+  onChange({observable, nextValue, previousValue}) {
     if (this._ignoreChanges) return;
     log('CHANGE REGISTERED');
     if (this.recording) clearTimeout(this.recording); // reset timeout
@@ -178,6 +178,7 @@ export default class UndoManager {
     this.future.push(present);
 
     this._ignoreChanges = true;
+
     log(present.length, 'steps');
     present.reverse().forEach(({observable, previousValue}) => {
       if (Array.isArray(previousValue)) {
@@ -186,21 +187,20 @@ export default class UndoManager {
           previousValue.forEach((item) => {
             if (targetArray.includes(item)) return;
             observable.push(item);
-            // this.startListening(item);
           });
         }
         if (previousValue.length < targetArray.length) {
           targetArray.forEach((item) => {
             if (previousValue.includes(item)) return;
             observable.remove(item);
-            // this.stopListening(item);
           });
         }
       } else {
         observable(previousValue);
       }
     });
-    setTimeout(() => this._ignoreChanges = false);
+
+    this._ignoreChanges = false;
   }
 
   redo() {
@@ -235,7 +235,8 @@ export default class UndoManager {
         observable(nextValue);
       }
     });
-    setTimeout(() => this._ignoreChanges = false);
+
+    this._ignoreChanges = false;
   }
 
   isUndoable(vm) {
