@@ -116,7 +116,7 @@ describe('Knockout Undo Manager', () => {
       viewModel.name('Three');
       viewModel.name('Four');
 
-      await waitFor(throttle);
+      await waitFor(throttle + 1);
 
       viewModel.name('Five');
       viewModel.name('Six');
@@ -146,15 +146,15 @@ describe('Knockout Undo Manager', () => {
 
     it('should remove listeners when array items are deleted', () => {
       viewModel.names.pop();
-      expect(undomanager._subscriptions.length).to.equal(3);
+      expect(undomanager._subscriptions.length).to.equal(3, 'after pop');
 
       undomanager.undo();
 
-      expect(undomanager._subscriptions.length).to.equal(4);
+      expect(undomanager._subscriptions.length).to.equal(4, 'after undo');
 
       undomanager.redo();
 
-      expect(undomanager._subscriptions.length).to.equal(3);
+      expect(undomanager._subscriptions.length).to.equal(3, 'after redo');
     });
 
     it('should add listeners when array items are added', () => {
@@ -175,13 +175,23 @@ describe('Knockout Undo Manager', () => {
 
     class Tree { // Adds 1 listener
       branches = ko.observableArray([]);
+      toString() { return 'Tree';}
     }
 
     class Branch extends Tree { // Adds 1 listener
+      static count = 0;
+      id = 0;
+      constructor() {
+        super();
+        this.id = ++Branch.count;
+      }
+
+      toString() { return 'Branch-' + this.id;}
     }
 
     class Leaf { // Adds 1 listener
       name = ko.observable();
+      toString() { return 'Leaf';}
     }
 
     let tree;
@@ -224,16 +234,18 @@ describe('Knockout Undo Manager', () => {
       tree.branches.push(longBranch);
       tree.branches.push(new Branch());
 
+      undomanager.takeSnapshot();
+
       tree.branches.removeAll();
-      expect(undomanager._subscriptions.length).to.equal(1);
+      expect(undomanager._subscriptions.length).to.equal(1, 'after removing everything');
 
       undomanager.undo();
 
-      expect(undomanager._subscriptions.length).to.equal(7);
+      expect(undomanager._subscriptions.length).to.equal(7, 'after undo');
 
       undomanager.redo();
 
-      expect(undomanager._subscriptions.length).to.equal(1);
+      expect(undomanager._subscriptions.length).to.equal(1, 'after redo');
     });
 
     it('should handle deeply nested structures', () => {

@@ -1,5 +1,8 @@
 import ko from 'knockout';
 
+const log = () => {};
+// const log = console.log;
+
 export default class UndoManager {
   /**
    * Determins how many undo/redo steps will be stored in memory.
@@ -31,7 +34,7 @@ export default class UndoManager {
    * This acts as a full rollback path.
    * @type {Array}
    */
-  undoCollection = [];
+  changeset = [];
 
   _subscriptions = [];
   recording = null;
@@ -46,38 +49,47 @@ export default class UndoManager {
   startListening(vm) {
     if (this.isUndoable(vm)) {
       const observable = vm;
-      let currentValue = observable.peek();
+      let previousValue = observable.peek();
 
-      if (Array.isArray(currentValue)) {
-        currentValue = [...currentValue]; // clone
-
-        this.startListening(currentValue);
+      if (Array.isArray(previousValue)) {
+        previousValue = [...previousValue]; // clone
 
         const subscription = observable.subscribe((changes) => {
-          let nextValue;
-          changes.forEach((change) => {
+          let nextValue = changes.reduce((subject, change) => {
+            log('- Array Event:', change.status);
             switch (change.status) {
               case 'added':
-                nextValue = currentValue.splice(change.index, 0, change.value);
                 this.startListening(change.value);
-                break;
+                log('Start listening to', ko.unwrap(change.value).toString(), this._subscriptions.length, 'listeners');
+                subject = [...subject];
+                subject.splice(change.index, 0, change.value)
+                return subject;
               case 'deleted':
-                nextValue = currentValue.splice(change.index, 1);
                 this.stopListening(change.value);
-                break;
+                log('Stop listening to', ko.unwrap(change.value).toString(), this._subscriptions.length, 'listeners');
+                subject = [...subject];
+                subject.splice(change.index, 1);
+                return subject;
+              default:
+                return [...subject];
             }
-          });
-          this.change({observable, nextValue, previousValue: currentValue});
-          currentValue = nextValue;
+          }, [...previousValue]);
+
+          this.change({observable, nextValue, previousValue});
+          previousValue = [...nextValue];
         }, null, 'arrayChange');
 
         this._subscriptions.push(subscription);
+        // log('Added [array]', this._subscriptions.length, 'listeners')
+
+        this.startListening(previousValue);
       } else {
         const subscription = observable.subscribe((nextValue) => {
-          this.change({observable, nextValue, previousValue: currentValue});
-          currentValue = nextValue;
+          this.change({observable, nextValue, previousValue});
+          previousValue = nextValue;
         });
         this._subscriptions.push(subscription);
+        // log('Added', observable.peek(), this._subscriptions.length, 'listeners');
       }
       return;
     }
@@ -97,7 +109,7 @@ export default class UndoManager {
   stopListening(vm) {
     if (this.isUndoable(vm)) {
       const observable = vm;
-      const currentValue = observable.peek();
+      const previousValue = observable.peek();
 
       this._subscriptions = this._subscriptions.reduce((reduced, subscription) => {
         if (subscription._target === observable) {
@@ -108,8 +120,8 @@ export default class UndoManager {
         return reduced;
       }, []);
 
-      if (Array.isArray(currentValue)) {
-        this.stopListening(currentValue);
+      if (Array.isArray(previousValue)) {
+        this.stopListening(previousValue);
       }
       return;
     }
@@ -126,24 +138,27 @@ export default class UndoManager {
     }
   }
 
+  takeSnapshot() {
+    clearTimeout(this.recording);
+    this.past = this.past.slice(-this.steps);
+    this.future = [];
+    this.changeset = [];
+    this.recording = null;
+    log('BEGIN NEW CHANGESET');
+    log(this.past.length, 'items in history');
+  }
+
   change({observable, nextValue, previousValue}) {
     if (this._ignoreChanges) return;
-
-    if (this.recording) clearTimeout(this.recording);
-    else this.past.push(this.undoCollection);
+    log('CHANGE REGISTERED');
+    if (this.recording) clearTimeout(this.recording); // reset timeout
+    else this.past.push(this.changeset); // push the changeset immediatelly
 
     const atomicChange = {observable, nextValue, previousValue};
-    this.undoCollection.push(atomicChange);
+    this.changeset.push(atomicChange);
 
-    const afterCollecting = () => {
-      this.past = this.past.slice(-this.steps);
-      this.future = [];
-      this.undoCollection = [];
-      this.recording = null;
-    }
-
-    if (this.throttle) this.recording = setTimeout(afterCollecting, this.throttle);
-    else afterCollecting();
+    if (this.throttle) this.recording = setTimeout(() => this.takeSnapshot(), this.throttle);
+    else this.takeSnapshot();
   }
 
   destroy() {
@@ -163,6 +178,7 @@ export default class UndoManager {
     this.future.push(present);
 
     this._ignoreChanges = true;
+    log(present.length, 'steps');
     present.reverse().forEach(({observable, previousValue}) => {
       if (Array.isArray(previousValue)) {
         const targetArray = [...observable.peek()];
@@ -170,14 +186,14 @@ export default class UndoManager {
           previousValue.forEach((item) => {
             if (targetArray.includes(item)) return;
             observable.push(item);
-            this.startListening(item);
+            // this.startListening(item);
           });
         }
         if (previousValue.length < targetArray.length) {
           targetArray.forEach((item) => {
             if (previousValue.includes(item)) return;
             observable.remove(item);
-            this.stopListening(item);
+            // this.stopListening(item);
           });
         }
       } else {
@@ -185,7 +201,6 @@ export default class UndoManager {
       }
     });
     setTimeout(() => this._ignoreChanges = false);
-    // console.log({past: this.past.length, future: this.future.length});
   }
 
   redo() {
@@ -198,21 +213,22 @@ export default class UndoManager {
     this.past.push(present);
 
     this._ignoreChanges = true;
+
+    log('Changeset contains steps:', present.length);
     present.reverse().forEach(({observable, nextValue}) => {
       if (Array.isArray(nextValue)) {
-        const targetArray = [...observable.peek()];
+        const targetArray = [...observable.peek()]; // clone
+
         if (nextValue.length > targetArray.length) {
           nextValue.forEach((item) => {
             if (targetArray.includes(item)) return;
             observable.push(item);
-            this.startListening(item);
           });
         }
         if (nextValue.length < targetArray.length) {
           targetArray.forEach((item) => {
             if (nextValue.includes(item)) return;
             observable.remove(item);
-            this.stopListening(item);
           });
         }
       } else {
@@ -220,7 +236,6 @@ export default class UndoManager {
       }
     });
     setTimeout(() => this._ignoreChanges = false);
-    // console.log({past: this.past.length, future: this.future.length});
   }
 
   isUndoable(vm) {
