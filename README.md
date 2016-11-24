@@ -95,5 +95,5 @@ That way you can still explicitly reference the variable in your code, but it wo
 
 
 # TODOs
-* [v] Implement proper garbage collection for old listeners (2016-11-24)
+* [x] Implement proper garbage collection for old listeners (2016-11-24)
 * [ ] Make knockout-undoredo's properties observable themselves. (steps, throttle, past, future, subscriptions, recording) (2016-11-24)
