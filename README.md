@@ -94,6 +94,6 @@ class Example {
 That way you can still explicitly reference the variable in your code, but it won't be collected by `for`-loops and `Object.keys`, `Object.values` or `Object.entries` respectively. Remember that it'll still be visible to `Object.getOwnPropertyNames`!
 
 
-# TODO
-[ ] Implement proper garbage collection for old listeners (2016-11-24)
-[ ] Make knockout-undoredo's properties observable themselves. (steps, throttle, past, future, subscriptions, recording) (2016-11-24)
+# TODOs
+* [ ] Implement proper garbage collection for old listeners (2016-11-24)
+* [ ] Make knockout-undoredo's properties observable themselves. (steps, throttle, past, future, subscriptions, recording) (2016-11-24)
