@@ -71,6 +71,27 @@ console.log(vm.message()); // Thanks Obama
 | `throttle` | <code>integer</code> | `300`   | Timeout in which changes will be collected into a changeset |
 | `steps`    | <code>integer</code> | `30`    | Stack size for undoable/redoable changes |
 
+## Taking manual snapshots
+
+Snapshots are a collection of operations as one undo step. You can configure which operations should be bundled through the `throttle` contructor option. Besides that you can always manually trigger a snapshot through `undomanager.takeSnapshot()`:
+
+```js
+// ...
+
+const undomanager = new UndoManager(vm, {throttle: 300});
+
+console.log(vm.message()); // Thanks Obama
+vm.name('Trump');
+
+// Take an early snapshot
+undomanager.takeSnapshot()
+
+vm.name('Clinton');
+console.log(vm.message()); // Thanks Clinton
+undomanager.undo();
+console.log(vm.message()); // Thanks Trump
+```
+
 ## Skipping observables
 
 By default all enumerable properties of an object will be subscribed to. If you want to skip a knockout obersvable you can modify the object's `enumerable` property:
