@@ -102,7 +102,7 @@ Object.defineProperty(obj, 'key', {
 });
 ```
 
-If you are one of the lucky guys who can make use of ES2016+ features in your code (i.e. through babel) you can simply import the `nonenumerable` decorator from the `core-decorators` module.
+If you are one of the lucky guys who can make use of ES2016+ features in your code (i.e. through babel) you can simply import the `nonenumerable` decorator from the [core-decorators](jayphelps/core-decorators.js) module, or anything alike.
 
 ```javascript
 import {nonenumerable} from 'core-decorators';
