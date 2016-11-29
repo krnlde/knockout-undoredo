@@ -277,18 +277,22 @@ describe('Knockout Undo Manager', () => {
   describe('Github issues', () => {
 
     it('#3 - Crashes on circular references', () => {
-      const undomanager = new UndoManager();
+      function init() {
+        const undomanager = new UndoManager();
 
-      let semiCircleA = ko.observableArray();
-      let semiCircleB = ko.observableArray();
+        let semiCircleA = ko.observableArray();
+        let semiCircleB = ko.observableArray();
 
-      // Creating the circular reference here:
-      semiCircleA.push(semiCircleB);
-      semiCircleB.push(semiCircleA);
+        // Creating the circular reference here:
+        semiCircleA.push(semiCircleB);
+        semiCircleB.push(semiCircleA);
 
-      undomanager.startListening(semiCircleA);
+        undomanager.startListening(semiCircleA);
 
-      undomanager.destroy()
+        undomanager.destroy();
+      }
+
+      expect(init).not.to.throw();
     });
   })
 });
