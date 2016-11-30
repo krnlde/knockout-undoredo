@@ -1,3 +1,8 @@
+<a name="1.0.10"></a>
+## [1.0.10](https://github.com/krnlde/knockout-undoredo/compare/v1.0.9...v1.0.10) (2016-11-30)
+
+
+
 <a name="1.0.9"></a>
 ## [1.0.9](https://github.com/krnlde/knockout-undoredo/compare/v1.0.8...v1.0.9) (2016-11-24)
 
