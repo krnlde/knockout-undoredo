@@ -3,6 +3,11 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = undefined;
+
+var _getOwnPropertyDescriptor = require('babel-runtime/core-js/object/get-own-property-descriptor');
+
+var _getOwnPropertyDescriptor2 = _interopRequireDefault(_getOwnPropertyDescriptor);
 
 var _getIterator2 = require('babel-runtime/core-js/get-iterator');
 
@@ -32,16 +37,49 @@ var _createClass2 = require('babel-runtime/helpers/createClass');
 
 var _createClass3 = _interopRequireDefault(_createClass2);
 
+var _desc, _value, _class;
+
+var _coreDecorators = require('core-decorators');
+
 var _knockout = require('knockout');
 
 var _knockout2 = _interopRequireDefault(_knockout);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
+  var desc = {};
+  Object['ke' + 'ys'](descriptor).forEach(function (key) {
+    desc[key] = descriptor[key];
+  });
+  desc.enumerable = !!desc.enumerable;
+  desc.configurable = !!desc.configurable;
+
+  if ('value' in desc || desc.initializer) {
+    desc.writable = true;
+  }
+
+  desc = decorators.slice().reverse().reduce(function (desc, decorator) {
+    return decorator(target, property, desc) || desc;
+  }, desc);
+
+  if (context && desc.initializer !== void 0) {
+    desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+    desc.initializer = undefined;
+  }
+
+  if (desc.initializer === void 0) {
+    Object['define' + 'Property'](target, property, desc);
+    desc = null;
+  }
+
+  return desc;
+}
+
 var log = function log() {};
 // const log = console.log;
 
-var UndoManager = function () {
+var UndoManager = (_class = function () {
 
   /**
    * [throttle description]
@@ -371,6 +409,5 @@ var UndoManager = function () {
     }
   }]);
   return UndoManager;
-}();
-
+}(), (_applyDecoratedDescriptor(_class.prototype, 'startListening', [_coreDecorators.autobind], (0, _getOwnPropertyDescriptor2.default)(_class.prototype, 'startListening'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'stopListening', [_coreDecorators.autobind], (0, _getOwnPropertyDescriptor2.default)(_class.prototype, 'stopListening'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'takeSnapshot', [_coreDecorators.autobind], (0, _getOwnPropertyDescriptor2.default)(_class.prototype, 'takeSnapshot'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'destroy', [_coreDecorators.autobind], (0, _getOwnPropertyDescriptor2.default)(_class.prototype, 'destroy'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'undo', [_coreDecorators.autobind], (0, _getOwnPropertyDescriptor2.default)(_class.prototype, 'undo'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'redo', [_coreDecorators.autobind], (0, _getOwnPropertyDescriptor2.default)(_class.prototype, 'redo'), _class.prototype), _applyDecoratedDescriptor(_class.prototype, 'isUndoable', [_coreDecorators.autobind], (0, _getOwnPropertyDescriptor2.default)(_class.prototype, 'isUndoable'), _class.prototype)), _class);
 exports.default = UndoManager;

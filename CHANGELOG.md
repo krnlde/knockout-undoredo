@@ -1,3 +1,13 @@
+<a name="1.1.0"></a>
+# [1.1.0](https://github.com/krnlde/knockout-undoredo/compare/v1.0.10...v1.1.0) (2016-12-06)
+
+
+### Features
+
+* **core:** Add [@autobind](https://github.com/autobind) decorator to use the methods as knockout event-handlers directly. ([26da1f6](https://github.com/krnlde/knockout-undoredo/commit/26da1f6))
+
+
+
 <a name="1.0.10"></a>
 ## [1.0.10](https://github.com/krnlde/knockout-undoredo/compare/v1.0.9...v1.0.10) (2016-11-30)
 
