@@ -1,3 +1,4 @@
+import {autobind} from 'core-decorators';
 import ko from 'knockout';
 
 const log = () => {};
@@ -47,6 +48,7 @@ export default class UndoManager {
     this.startListening(vm);
   }
 
+  @autobind
   startListening(vm) {
     if (this.isUndoable(vm)) {
       if (this._subscriptions.has(vm)) return;
@@ -102,6 +104,7 @@ export default class UndoManager {
     }
   }
 
+  @autobind
   stopListening(vm) {
     if (this.isUndoable(vm)) {
       const observable = vm;
@@ -132,6 +135,7 @@ export default class UndoManager {
     }
   }
 
+  @autobind
   takeSnapshot() {
     clearTimeout(this.recording);
     const waste = this.past.splice(0, this.past.length - this.steps);
@@ -158,6 +162,7 @@ export default class UndoManager {
     else this.takeSnapshot();
   }
 
+  @autobind
   destroy() {
     this.past = [];
     this.future = [];
@@ -165,6 +170,7 @@ export default class UndoManager {
     // this._subscriptions = [];
   }
 
+  @autobind
   undo() {
     if (!this.past.length) return;
     if (this.recording) {
@@ -199,6 +205,7 @@ export default class UndoManager {
     setTimeout(() => this._ignoreChanges = false);
   }
 
+  @autobind
   redo() {
     if (!this.future.length) return;
     if (this.recording) {
@@ -234,6 +241,7 @@ export default class UndoManager {
     setTimeout(() => this._ignoreChanges = false);
   }
 
+  @autobind
   isUndoable(vm) {
     return ko.isWritableObservable(vm) && !ko.isComputed(vm) && ko.isSubscribable(vm);
   }
