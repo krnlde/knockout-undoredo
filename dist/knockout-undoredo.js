@@ -82,6 +82,18 @@ var log = function log() {};
 var UndoManager = (_class = function () {
 
   /**
+   * TimeoutId when recording is active
+   * @type {int}
+   */
+
+
+  /**
+   * Returns a boolean of whether there are redo-steps or not
+   * @return {Boolean}   has redo steps
+   */
+
+
+  /**
    * [throttle description]
    * @type {Number}
    */
@@ -92,6 +104,8 @@ var UndoManager = (_class = function () {
    * @type {Array}
    */
   function UndoManager(vm) {
+    var _this = this;
+
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
         _ref$steps = _ref.steps,
         steps = _ref$steps === undefined ? 30 : _ref$steps,
@@ -99,17 +113,24 @@ var UndoManager = (_class = function () {
         throttle = _ref$throttle === undefined ? 300 : _ref$throttle;
 
     (0, _classCallCheck3.default)(this, UndoManager);
-    this.past = [];
-    this.future = [];
-    this.throttle = 300;
-    this.changeset = [];
+    this.steps = _knockout2.default.observable(30);
+    this.past = _knockout2.default.observableArray([]);
+    this.future = _knockout2.default.observableArray([]);
+    this.throttle = _knockout2.default.observable(300);
+    this.hasUndo = _knockout2.default.pureComputed(function () {
+      return Boolean(_this.past().length);
+    });
+    this.hasRedo = _knockout2.default.pureComputed(function () {
+      return Boolean(_this.future().length);
+    });
+    this._changeset = [];
+    this.recording = _knockout2.default.observable();
     this._subscriptions = new _weakMap2.default();
     this._subscriptionsCount = 0;
-    this.recording = null;
     this._ignoreChanges = false;
 
-    this.steps = steps;
-    this.throttle = throttle;
+    this.steps(steps);
+    this.throttle(throttle);
     this.startListening(vm);
   }
 
@@ -117,6 +138,12 @@ var UndoManager = (_class = function () {
    * A collection for all changes done within the {@see throttle} timeout.
    * This acts as a full rollback path.
    * @type {Array}
+   */
+
+
+  /**
+   * Returns a boolean of whether there are undo-steps or not
+   * @return {Boolean}   has undo steps
    */
 
 
@@ -134,11 +161,11 @@ var UndoManager = (_class = function () {
   (0, _createClass3.default)(UndoManager, [{
     key: 'startListening',
     value: function startListening(vm) {
-      var _this = this;
+      var _this2 = this;
 
       if (this.isUndoable(vm)) {
         var _ret = function () {
-          if (_this._subscriptions.has(vm)) return {
+          if (_this2._subscriptions.has(vm)) return {
               v: void 0
             };
           var observable = vm;
@@ -154,35 +181,35 @@ var UndoManager = (_class = function () {
                 subject = [].concat((0, _toConsumableArray3.default)(subject));
                 switch (change.status) {
                   case 'added':
-                    _this.startListening(change.value);
+                    _this2.startListening(change.value);
                     subject.splice(change.index + offset++, 0, change.value);
                     return subject;
                   case 'deleted':
                     subject.splice(change.index + offset--, 1);
-                    _this.stopListening(change.value);
+                    _this2.stopListening(change.value);
                     return subject;
                   default:
                     return subject;
                 }
               }, previousValue);
 
-              _this.onChange({ observable: observable, nextValue: nextValue, previousValue: previousValue });
+              _this2.onChange({ observable: observable, nextValue: nextValue, previousValue: previousValue });
               previousValue = nextValue;
             }, null, 'arrayChange');
 
-            _this._subscriptions.set(vm, subscription);
-            _this._subscriptionsCount++;
+            _this2._subscriptions.set(vm, subscription);
+            _this2._subscriptionsCount++;
 
             previousValue.forEach(function (item) {
-              return _this.startListening(item);
+              return _this2.startListening(item);
             });
           } else {
             var _subscription = observable.subscribe(function (nextValue) {
-              _this.onChange({ observable: observable, nextValue: nextValue, previousValue: previousValue });
+              _this2.onChange({ observable: observable, nextValue: nextValue, previousValue: previousValue });
               previousValue = nextValue;
             });
-            _this._subscriptions.set(vm, _subscription);
-            _this._subscriptionsCount++;
+            _this2._subscriptions.set(vm, _subscription);
+            _this2._subscriptionsCount++;
           }
         }();
 
@@ -273,55 +300,50 @@ var UndoManager = (_class = function () {
   }, {
     key: 'takeSnapshot',
     value: function takeSnapshot() {
-      clearTimeout(this.recording);
-      var waste = this.past.splice(0, this.past.length - this.steps);
+      clearTimeout(this.recording());
+      this.past.splice(0, this.past().length - this.steps());
 
-      // // Garbage Collection
-      // if (waste.length) {
-      //   this.stopListening(waste);
-      // }
-
-      this.future = [];
-      this.changeset = [];
-      this.recording = null;
+      this.future([]);
+      this._changeset = [];
+      this.recording(null);
     }
   }, {
     key: 'onChange',
     value: function onChange(_ref2) {
-      var _this2 = this;
+      var _this3 = this;
 
       var observable = _ref2.observable,
           nextValue = _ref2.nextValue,
           previousValue = _ref2.previousValue;
 
       if (this._ignoreChanges) return;
-      if (this.recording) clearTimeout(this.recording); // reset timeout
-      else this.past.push(this.changeset); // push the changeset immediatelly
+      if (this.recording()) clearTimeout(this.recording()); // reset timeout
+      else this.past.push(this._changeset); // push the changeset immediatelly
 
       var atomicChange = { observable: observable, nextValue: nextValue, previousValue: previousValue };
-      this.changeset.push(atomicChange);
+      this._changeset.push(atomicChange);
 
-      if (this.throttle) this.recording = setTimeout(function () {
-        return _this2.takeSnapshot();
-      }, this.throttle);else this.takeSnapshot();
+      if (this.throttle()) this.recording(setTimeout(function () {
+        return _this3.takeSnapshot();
+      }, this.throttle()));else this.takeSnapshot();
     }
   }, {
     key: 'destroy',
     value: function destroy() {
-      this.past = [];
-      this.future = [];
+      this.past([]);
+      this.future([]);
       // this._subscriptions.forEach((subscription) => subscription.dispose());
       // this._subscriptions = [];
     }
   }, {
     key: 'undo',
     value: function undo() {
-      var _this3 = this;
+      var _this4 = this;
 
-      if (!this.past.length) return;
-      if (this.recording) {
-        clearTimeout(this.recording);
-        this.recording = null;
+      if (!this.past().length) return;
+      if (this.recording()) {
+        clearTimeout(this.recording());
+        this.recording(null);
       }
       var present = this.past.pop();
       this.future.push(present);
@@ -354,18 +376,18 @@ var UndoManager = (_class = function () {
       });
 
       setTimeout(function () {
-        return _this3._ignoreChanges = false;
+        return _this4._ignoreChanges = false;
       });
     }
   }, {
     key: 'redo',
     value: function redo() {
-      var _this4 = this;
+      var _this5 = this;
 
-      if (!this.future.length) return;
-      if (this.recording) {
-        clearTimeout(this.recording);
-        this.recording = null;
+      if (!this.future().length) return;
+      if (this.recording()) {
+        clearTimeout(this.recording());
+        this.recording(null);
       }
       var present = this.future.pop();
       this.past.push(present);
@@ -399,7 +421,7 @@ var UndoManager = (_class = function () {
       });
 
       setTimeout(function () {
-        return _this4._ignoreChanges = false;
+        return _this5._ignoreChanges = false;
       });
     }
   }, {

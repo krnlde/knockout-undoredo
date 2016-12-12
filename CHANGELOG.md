@@ -1,3 +1,13 @@
+<a name="1.2.0"></a>
+# [1.2.0](https://github.com/krnlde/knockout-undoredo/compare/v1.1.0...v1.2.0) (2016-12-12)
+
+
+### Features
+
+* **core:** Advance all public variables to a knockout observable. ([612db93](https://github.com/krnlde/knockout-undoredo/commit/612db93))
+
+
+
 <a name="1.1.0"></a>
 # [1.1.0](https://github.com/krnlde/knockout-undoredo/compare/v1.0.10...v1.1.0) (2016-12-06)
 
