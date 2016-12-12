@@ -52,6 +52,24 @@ describe('Knockout Undo Manager', () => {
     });
     afterEach(() => undomanager.destroy());
 
+    it('should have an undo step', () => {
+      expect(undomanager.hasUndo()).to.equal(false);
+      viewModel.name('Clinton');
+      expect(undomanager.hasUndo()).to.equal(true);
+      undomanager.undo();
+      expect(undomanager.hasUndo()).to.equal(false);
+    });
+
+    it('should have a redo step', () => {
+      expect(undomanager.hasRedo()).to.equal(false);
+      viewModel.name('Clinton');
+      expect(undomanager.hasRedo()).to.equal(false);
+      undomanager.undo();
+      expect(undomanager.hasRedo()).to.equal(true);
+      undomanager.redo();
+      expect(undomanager.hasRedo()).to.equal(false);
+    });
+
     it('should undo the last change', () => {
       expect(viewModel.name()).to.equal('Obama');
       viewModel.name('Clinton');

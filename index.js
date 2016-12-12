@@ -9,42 +9,60 @@ export default class UndoManager {
    * Determins how many undo/redo steps will be stored in memory.
    * @type {Number}
    */
-  steps;
+  steps = ko.observable(30);
 
   /**
    * Stack for past state snapshots
    * @type {Array}
    */
-  past = [];
+  past = ko.observableArray([]);
 
   /**
    * Stack for future state snapshots
    * @type {Array}
    */
-  future = [];
+  future = ko.observableArray([]);
 
 
   /**
    * [throttle description]
    * @type {Number}
    */
-  throttle = 300;
+  throttle = ko.observable(300);
+
+  /**
+   * Returns a boolean of whether there are undo-steps or not
+   * @return {Boolean}   has undo steps
+   */
+  hasUndo = ko.pureComputed(() => Boolean(this.past().length) );
+
+  /**
+   * Returns a boolean of whether there are redo-steps or not
+   * @return {Boolean}   has redo steps
+   */
+  hasRedo = ko.pureComputed(() => Boolean(this.future().length) );
 
   /**
    * A collection for all changes done within the {@see throttle} timeout.
    * This acts as a full rollback path.
    * @type {Array}
    */
-  changeset = [];
+  _changeset = [];
+
+  /**
+   * TimeoutId when recording is active
+   * @type {int}
+   */
+  recording = ko.observable();
+
 
   _subscriptions = new WeakMap();
   _subscriptionsCount = 0;
-  recording = null;
   _ignoreChanges = false;
 
   constructor(vm, {steps = 30, throttle = 300} = {}) {
-    this.steps    = steps;
-    this.throttle = throttle;
+    this.steps(steps);
+    this.throttle(throttle);
     this.startListening(vm);
   }
 
@@ -114,7 +132,6 @@ export default class UndoManager {
         this._subscriptions.get(observable).dispose();
         this._subscriptions.delete(observable);
         this._subscriptionsCount--;
-
       }
 
       if (Array.isArray(previousValue)) {
@@ -137,45 +154,40 @@ export default class UndoManager {
 
   @autobind
   takeSnapshot() {
-    clearTimeout(this.recording);
-    const waste = this.past.splice(0, this.past.length - this.steps);
+    clearTimeout(this.recording());
+    this.past.splice(0, this.past().length - this.steps());
 
-    // // Garbage Collection
-    // if (waste.length) {
-    //   this.stopListening(waste);
-    // }
-
-    this.future = [];
-    this.changeset = [];
-    this.recording = null;
+    this.future([]);
+    this._changeset = [];
+    this.recording(null);
   }
 
   onChange({observable, nextValue, previousValue}) {
     if (this._ignoreChanges) return;
-    if (this.recording) clearTimeout(this.recording); // reset timeout
-    else this.past.push(this.changeset); // push the changeset immediatelly
+    if (this.recording()) clearTimeout(this.recording()); // reset timeout
+    else this.past.push(this._changeset); // push the changeset immediatelly
 
     const atomicChange = {observable, nextValue, previousValue};
-    this.changeset.push(atomicChange);
+    this._changeset.push(atomicChange);
 
-    if (this.throttle) this.recording = setTimeout(() => this.takeSnapshot(), this.throttle);
+    if (this.throttle()) this.recording(setTimeout(() => this.takeSnapshot(), this.throttle()));
     else this.takeSnapshot();
   }
 
   @autobind
   destroy() {
-    this.past = [];
-    this.future = [];
+    this.past([]);
+    this.future([]);
     // this._subscriptions.forEach((subscription) => subscription.dispose());
     // this._subscriptions = [];
   }
 
   @autobind
   undo() {
-    if (!this.past.length) return;
-    if (this.recording) {
-      clearTimeout(this.recording);
-      this.recording = null;
+    if (!this.past().length) return;
+    if (this.recording()) {
+      clearTimeout(this.recording());
+      this.recording(null);
     }
     const present = this.past.pop();
     this.future.push(present);
@@ -207,10 +219,10 @@ export default class UndoManager {
 
   @autobind
   redo() {
-    if (!this.future.length) return;
-    if (this.recording) {
-      clearTimeout(this.recording);
-      this.recording = null;
+    if (!this.future().length) return;
+    if (this.recording()) {
+      clearTimeout(this.recording());
+      this.recording(null);
     }
     const present = this.future.pop();
     this.past.push(present);
