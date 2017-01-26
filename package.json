@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "babel-runtime": "^6.18.0",
-    "core-decorators": "^0.14.0",
+    "core-decorators": "^0.15.0",
     "knockout": "^3.3.0"
   },
   "devDependencies": {
