@@ -112,12 +112,8 @@ export default class UndoManager {
         this._subscriptionsCount++;
       }
     } else if (typeof vm === 'object') {
-      const items = Object.values(vm);
-
-      if (items.length) {
-        for (let item of items) {
-          this.startListening(item);
-        }
+      for (const item of Object.values(vm)) {
+        this.startListening(item);
       }
     }
   }
@@ -141,13 +137,8 @@ export default class UndoManager {
     }
 
     if (typeof vm === 'object') {
-      const items = Object.values(vm);
-
-      if (items.length) {
-        for (let item of items) {
-          this.stopListening(item);
-        }
-        return;
+      for (const item of Object.values(vm)) {
+        this.stopListening(item);
       }
     }
   }
