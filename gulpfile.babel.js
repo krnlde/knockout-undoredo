@@ -65,7 +65,10 @@ gulp.task('test', () => {
   if (argv['skip-tests']) return gutil.log('Tests skipped via --skip-tests argument');
 
   return gulp.src('./test/*')
-    .pipe(test({reporter: 'spec'}));
+    .pipe(test({
+      compilers: 'js:babel-core/register',
+      reporter: 'spec',
+    }));
 });
 
 gulp.task('security-checkup', (cb) => {
