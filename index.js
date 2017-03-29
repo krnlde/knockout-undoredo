@@ -246,6 +246,6 @@ export default class UndoManager {
 
   @autobind
   isUndoable(vm) {
-    return ko.isWritableObservable(vm) && !ko.isComputed(vm) && ko.isSubscribable(vm);
+    return ko.isWritableObservable(vm) && ko.isSubscribable(vm);
   }
 }

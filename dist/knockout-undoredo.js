@@ -164,56 +164,50 @@ var UndoManager = (_class = function () {
       var _this2 = this;
 
       if (this.isUndoable(vm)) {
-        var _ret = function () {
-          if (_this2._subscriptions.has(vm)) return {
-              v: void 0
-            };
-          var observable = vm;
-          var previousValue = observable.peek();
+        if (this._subscriptions.has(vm)) return;
+        var observable = vm;
+        var previousValue = observable.peek();
 
-          if (Array.isArray(previousValue)) {
-            previousValue = [].concat((0, _toConsumableArray3.default)(previousValue)); // clone
+        if (Array.isArray(previousValue)) {
+          previousValue = [].concat((0, _toConsumableArray3.default)(previousValue)); // clone
 
-            var subscription = observable.subscribe(function (changes) {
+          var subscription = observable.subscribe(function (changes) {
 
-              var offset = 0;
-              var nextValue = changes.reduce(function (subject, change) {
-                subject = [].concat((0, _toConsumableArray3.default)(subject));
-                switch (change.status) {
-                  case 'added':
-                    _this2.startListening(change.value);
-                    subject.splice(change.index + offset++, 0, change.value);
-                    return subject;
-                  case 'deleted':
-                    subject.splice(change.index + offset--, 1);
-                    _this2.stopListening(change.value);
-                    return subject;
-                  default:
-                    return subject;
-                }
-              }, previousValue);
+            var offset = 0;
+            var nextValue = changes.reduce(function (subject, change) {
+              subject = [].concat((0, _toConsumableArray3.default)(subject));
+              switch (change.status) {
+                case 'added':
+                  _this2.startListening(change.value);
+                  subject.splice(change.index + offset++, 0, change.value);
+                  return subject;
+                case 'deleted':
+                  subject.splice(change.index + offset--, 1);
+                  _this2.stopListening(change.value);
+                  return subject;
+                default:
+                  return subject;
+              }
+            }, previousValue);
 
-              _this2.onChange({ observable: observable, nextValue: nextValue, previousValue: previousValue });
-              previousValue = nextValue;
-            }, null, 'arrayChange');
+            _this2.onChange({ observable: observable, nextValue: nextValue, previousValue: previousValue });
+            previousValue = nextValue;
+          }, null, 'arrayChange');
 
-            _this2._subscriptions.set(vm, subscription);
-            _this2._subscriptionsCount++;
+          this._subscriptions.set(vm, subscription);
+          this._subscriptionsCount++;
 
-            previousValue.forEach(function (item) {
-              return _this2.startListening(item);
-            });
-          } else {
-            var _subscription = observable.subscribe(function (nextValue) {
-              _this2.onChange({ observable: observable, nextValue: nextValue, previousValue: previousValue });
-              previousValue = nextValue;
-            });
-            _this2._subscriptions.set(vm, _subscription);
-            _this2._subscriptionsCount++;
-          }
-        }();
-
-        if ((typeof _ret === 'undefined' ? 'undefined' : (0, _typeof3.default)(_ret)) === "object") return _ret.v;
+          previousValue.forEach(function (item) {
+            return _this2.startListening(item);
+          });
+        } else {
+          var _subscription = observable.subscribe(function (nextValue) {
+            _this2.onChange({ observable: observable, nextValue: nextValue, previousValue: previousValue });
+            previousValue = nextValue;
+          });
+          this._subscriptions.set(vm, _subscription);
+          this._subscriptionsCount++;
+        }
       } else if ((typeof vm === 'undefined' ? 'undefined' : (0, _typeof3.default)(vm)) === 'object') {
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
@@ -345,21 +339,19 @@ var UndoManager = (_class = function () {
             previousValue = _ref3.previousValue;
 
         if (Array.isArray(previousValue)) {
-          (function () {
-            var targetArray = [].concat((0, _toConsumableArray3.default)(observable.peek()));
-            if (previousValue.length > targetArray.length) {
-              previousValue.forEach(function (item) {
-                if (targetArray.includes(item)) return;
-                observable.push(item);
-              });
-            }
-            if (previousValue.length < targetArray.length) {
-              targetArray.forEach(function (item) {
-                if (previousValue.includes(item)) return;
-                observable.remove(item);
-              });
-            }
-          })();
+          var targetArray = [].concat((0, _toConsumableArray3.default)(observable.peek()));
+          if (previousValue.length > targetArray.length) {
+            previousValue.forEach(function (item) {
+              if (targetArray.includes(item)) return;
+              observable.push(item);
+            });
+          }
+          if (previousValue.length < targetArray.length) {
+            targetArray.forEach(function (item) {
+              if (previousValue.includes(item)) return;
+              observable.remove(item);
+            });
+          }
         } else {
           observable(previousValue);
         }
@@ -389,22 +381,20 @@ var UndoManager = (_class = function () {
             nextValue = _ref4.nextValue;
 
         if (Array.isArray(nextValue)) {
-          (function () {
-            var targetArray = [].concat((0, _toConsumableArray3.default)(observable.peek())); // clone
+          var targetArray = [].concat((0, _toConsumableArray3.default)(observable.peek())); // clone
 
-            if (nextValue.length > targetArray.length) {
-              nextValue.forEach(function (item) {
-                if (targetArray.includes(item)) return;
-                observable.push(item);
-              });
-            }
-            if (nextValue.length < targetArray.length) {
-              targetArray.forEach(function (item) {
-                if (nextValue.includes(item)) return;
-                observable.remove(item);
-              });
-            }
-          })();
+          if (nextValue.length > targetArray.length) {
+            nextValue.forEach(function (item) {
+              if (targetArray.includes(item)) return;
+              observable.push(item);
+            });
+          }
+          if (nextValue.length < targetArray.length) {
+            targetArray.forEach(function (item) {
+              if (nextValue.includes(item)) return;
+              observable.remove(item);
+            });
+          }
         } else {
           observable(nextValue);
         }
@@ -417,7 +407,7 @@ var UndoManager = (_class = function () {
   }, {
     key: 'isUndoable',
     value: function isUndoable(vm) {
-      return _knockout2.default.isWritableObservable(vm) && !_knockout2.default.isComputed(vm) && _knockout2.default.isSubscribable(vm);
+      return _knockout2.default.isWritableObservable(vm) && _knockout2.default.isSubscribable(vm);
     }
   }]);
   return UndoManager;

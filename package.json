@@ -1,6 +1,6 @@
 {
   "name": "knockout-undoredo",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Generic undo/redo history-management for knockout observables",
   "repository": "krnlde/knockout-undoredo",
   "main": "dist/knockout-undoredo.min.js",
@@ -44,9 +44,9 @@
     "gulp-connect": "^5.0.0",
     "gulp-conventional-changelog": "^1.1.0",
     "gulp-eslint": "^3.0.1",
-    "gulp-git": "^1.12.0",
-    "gulp-mocha": "^3.0.1",
-    "gulp-notify": "^2.2.0",
+    "gulp-git": "^2.1.0",
+    "gulp-mocha": "^4.2.0",
+    "gulp-notify": "^3.0.0",
     "gulp-nsp": "^2.4.2",
     "gulp-open": "^2.0.0",
     "gulp-rename": "^1.2.2",
@@ -56,7 +56,7 @@
     "minimist": "^1.2.0",
     "mocha": "^3.1.2",
     "run-sequence": "^1.2.2",
-    "systemjs-plugin-babel": "0.0.17",
+    "systemjs-plugin-babel": "0.0.21",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0"
   }
