@@ -46,7 +46,7 @@ undomanager.redo();
 console.log(vm.message()); // Thanks Trump
 ```
 
-##Create changesets as an undo/redo step
+## Create changesets as an undo/redo step
 
 knockout-undoredo has the ability to collect multiple changes over a defined time as a changeset. These collections will be merged to just one undo/redo step in the history timeline.
 
