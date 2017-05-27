@@ -31,12 +31,12 @@ describe('Knockout Undo Manager', () => {
 
     it('should have an undo method', () => {
       expect(undomanager).to.have.property('undo');
-      expect(undomanager.undo).be.a.function;
+      expect(undomanager.undo).be.a('function');
     });
 
     it('should have a redo method', () => {
       expect(undomanager).to.have.property('redo');
-      expect(undomanager.redo).be.a.function;
+      expect(undomanager.redo).be.a('function');
     });
 
   });
