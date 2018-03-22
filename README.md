@@ -5,6 +5,8 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/krnlde/knockout-undoredo/badge.svg)](https://snyk.io/test/github/krnlde/knockout-undoredo)
 
 # Knockout Undo-Redo
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/krnlde/knockout-undoredo.svg)](https://greenkeeper.io/)
 Generic undo/redo history-management for knockout observables.
 
 
