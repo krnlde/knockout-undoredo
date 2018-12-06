@@ -75,9 +75,9 @@ gulp.task('security-checkup', (cb) => {
   nsp({package: __dirname + '/package.json'}, cb);
 });
 
-gulp.task('full-checkup', ['lint', 'security-checkup', 'test']);
+gulp.task('full-checkup', gulp.series('lint', 'security-checkup', 'test'));
 
-gulp.task('build', ['full-checkup'], () =>
+gulp.task('bundle', () =>
   gulp.src('index.js')
     .pipe(rename('knockout-undoredo.js'))
     .pipe(babel())
@@ -87,6 +87,8 @@ gulp.task('build', ['full-checkup'], () =>
     .pipe(rename({suffix: '.min'}))
     .pipe(gulp.dest('dist'))
 );
+
+gulp.task('build', gulp.series('full-checkup', 'bundle'));
 
 gulp.task('serve-demo', () => {
   connect.server({
