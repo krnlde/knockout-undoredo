@@ -44,7 +44,7 @@
     "gulp-babel": "^7.0.0",
     "gulp-bump": "^3.1.0",
     "gulp-connect": "^5.7.0",
-    "gulp-conventional-changelog": "^1.1.7",
+    "gulp-conventional-changelog": "^2.0.10",
     "gulp-eslint": "^4.0.0",
     "gulp-git": "^2.4.2",
     "gulp-mocha": "^5.0.0",
