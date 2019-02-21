@@ -1,7 +1,6 @@
 import fs from 'fs';
 
 import minimist from 'minimist';
-import sequence from 'run-sequence';
 
 import gulp from 'gulp';
 import babel from 'gulp-babel';
@@ -44,11 +43,11 @@ gulp.task('commit-changes', () =>
     .pipe(git.commit('[Prerelease] Bumped version number'))
 );
 
-gulp.task('create-new-tag', (cb) => {
+gulp.task('create-new-tag', (done) => {
   var version = getPackageJsonVersion();
   git.tag(`v${version}`, 'Created Tag for version: ' + version, (error) => {
     if (error) return cb(error);
-    cb();
+    done();
     // git.push('origin', 'master', {args: '--tags'}, cb);
   });
 });
@@ -96,8 +95,7 @@ gulp.task('serve-demo', () => {
     }));
 });
 
-gulp.task('do-release', (done) =>
-  sequence(
+gulp.task('do-release', gulp.series(
     'build',
     'bump-version',
     'changelog',
