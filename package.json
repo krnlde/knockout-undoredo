@@ -24,6 +24,7 @@
     "node": ">= 5.0.0"
   },
   "dependencies": {
+    "@babel/runtime": "^7.3.1",
     "core-decorators": "^0.20.0",
     "knockout": "^3.5.0-beta"
   },
@@ -34,7 +35,6 @@
     "@babel/plugin-transform-runtime": "^7.2.0",
     "@babel/preset-env": "^7.3.1",
     "@babel/register": "^7.0.0",
-    "@babel/runtime": "^7.3.1",
     "babel-eslint": "^10.0.1",
     "chai": "^4.2.0",
     "gulp": "^4.0.0",
