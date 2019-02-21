@@ -100,11 +100,7 @@ gulp.task('do-release', gulp.series(
     'bump-version',
     'changelog',
     'commit-changes',
-    'create-new-tag',
-    function finish(error) {
-      if (error) gutil.log(error.message);
-      else gutil.log('RELEASE FINISHED SUCCESSFULLY');
-    },
+    'create-new-tag'
   )
 );
 
