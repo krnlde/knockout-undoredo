@@ -64,7 +64,7 @@ gulp.task('test', () => {
 
   return gulp.src('./test/*')
     .pipe(test({
-      require: 'babel-register',
+      require: '@babel/register',
       reporter: 'spec',
     }));
 });
