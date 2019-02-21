@@ -66,16 +66,12 @@ gulp.task('test', () => {
 
   return gulp.src('./test/*')
     .pipe(test({
-      compilers: 'js:babel-core/register',
+      require: 'babel-register',
       reporter: 'spec',
     }));
 });
 
-gulp.task('security-checkup', (cb) => {
-  nsp({package: __dirname + '/package.json'}, cb);
-});
-
-gulp.task('full-checkup', gulp.series('lint', 'security-checkup', 'test'));
+gulp.task('full-checkup', gulp.series('lint', 'test'));
 
 gulp.task('bundle', () =>
   gulp.src('index.js')
@@ -101,18 +97,12 @@ gulp.task('serve-demo', () => {
     }));
 });
 
-gulp.task('do-release', (done) =>
-  sequence(
+gulp.task('do-release', gulp.series(
     'build',
     'bump-version',
     'changelog',
     'commit-changes',
     'create-new-tag',
-    (error) => {
-      if (error) gutil.log(error.message);
-      else gutil.log('RELEASE FINISHED SUCCESSFULLY');
-      done(error);
-    },
   )
 );
 
