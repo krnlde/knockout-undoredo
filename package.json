@@ -1,6 +1,6 @@
 {
   "name": "knockout-undoredo",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Generic undo/redo history-management for knockout observables",
   "repository": "krnlde/knockout-undoredo",
   "main": "dist/knockout-undoredo.min.js",
@@ -26,7 +26,7 @@
   "dependencies": {
     "@babel/runtime": "^7.3.1",
     "core-decorators": "^0.20.0",
-    "knockout": "^3.5.0-beta"
+    "knockout": "^3.4.2"
   },
   "devDependencies": {
     "@babel/core": "^7.3.3",
