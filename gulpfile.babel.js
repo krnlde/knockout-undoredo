@@ -1,7 +1,6 @@
 import fs from 'fs';
 
 import minimist from 'minimist';
-import sequence from 'run-sequence';
 
 import gulp from 'gulp';
 import babel from 'gulp-babel';
@@ -12,7 +11,6 @@ import eslint from 'gulp-eslint';
 import git from 'gulp-git';
 import test from 'gulp-mocha';
 import notify from 'gulp-notify';
-import nsp from 'gulp-nsp';
 import open from 'gulp-open';
 import rename from 'gulp-rename';
 import uglify from 'gulp-uglify';
