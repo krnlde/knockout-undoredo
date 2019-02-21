@@ -10,9 +10,8 @@ import changelog from 'gulp-conventional-changelog';
 import connect from 'gulp-connect';
 import eslint from 'gulp-eslint';
 import git from 'gulp-git';
-import test from 'gulp-mocha';
+import mocha from 'gulp-mocha';
 import notify from 'gulp-notify';
-import nsp from 'gulp-nsp';
 import open from 'gulp-open';
 import rename from 'gulp-rename';
 import uglify from 'gulp-uglify';
@@ -64,18 +63,14 @@ gulp.task('lint', () =>
 gulp.task('test', () => {
   if (argv['skip-tests']) return gutil.log('Tests skipped via --skip-tests argument');
 
-  return gulp.src('./test/*')
-    .pipe(test({
-      compilers: 'js:babel-core/register',
+  return gulp.src('./test/*', {read: false})
+    .pipe(mocha({
+      require: ['@babel/register'],
       reporter: 'spec',
     }));
 });
 
-gulp.task('security-checkup', (cb) => {
-  nsp({package: __dirname + '/package.json'}, cb);
-});
-
-gulp.task('full-checkup', gulp.series('lint', 'security-checkup', 'test'));
+gulp.task('full-checkup', gulp.series('lint', 'test'));
 
 gulp.task('bundle', () =>
   gulp.src('index.js')
