@@ -1,8 +1,4 @@
-import {autobind} from 'core-decorators';
 import ko from 'knockout';
-
-const log = () => {};
-// const log = console.log;
 
 export default class UndoManager {
   /**
@@ -60,91 +56,100 @@ export default class UndoManager {
   _subscriptionsCount = 0;
   _ignoreChanges = false;
 
-  constructor(vm, {steps = 30, throttle = 300} = {}) {
+  constructor({steps = 30, throttle = 300} = {}) {
     this.steps(steps);
     this.throttle(throttle);
-    this.startListening(vm);
   }
 
-  @autobind
-  startListening(vm) {
-    if (this.isUndoable(vm)) {
-      if (this._subscriptions.has(vm)) return;
-      const observable = vm;
-      let previousValue = observable.peek();
 
-      if (Array.isArray(previousValue)) {
-        previousValue = [...previousValue]; // clone
+  startListening = (viewModel) => {
+    const visited = new WeakSet();
+    const _startListening = (vm) => {
+      if (vm instanceof UndoManager) return;
+      if (visited.has(vm)) return;
+      if (this.isObject(vm)) visited.add(vm);
+      if (this.isUndoable(vm)) {
+        if (this._subscriptions.has(vm)) return;
+        const observable = vm;
+        let previousValue = observable.peek();
 
-        const subscription = observable.subscribe((changes) => {
+        if (Array.isArray(previousValue)) {
+          previousValue = [...previousValue]; // clone
 
-          let offset = 0;
-          let nextValue = changes.reduce((subject, change) => {
-            subject = [...subject];
-            switch (change.status) {
-              case 'added':
-                this.startListening(change.value);
-                subject.splice(change.index + offset++, 0, change.value);
-                return subject;
-              case 'deleted':
-                subject.splice(change.index + offset--, 1);
-                this.stopListening(change.value);
-                return subject;
-              default:
-                return subject;
-            }
-          }, previousValue);
+          const subscription = observable.subscribe((changes) => {
 
-          this.onChange({observable, nextValue, previousValue});
-          previousValue = nextValue;
-        }, null, 'arrayChange');
+            let offset = 0;
+            let nextValue = changes.reduce((subject, change) => {
+              subject = [...subject];
+              switch (change.status) {
+                case 'added':
+                  this.startListening(change.value);
+                  subject.splice(change.index + offset++, 0, change.value);
+                  return subject;
+                case 'deleted':
+                  subject.splice(change.index + offset--, 1);
+                  this.stopListening(change.value);
+                  return subject;
+                default:
+                  return subject;
+              }
+            }, previousValue);
 
-        this._subscriptions.set(vm, subscription);
-        this._subscriptionsCount++;
+            this.onChange({observable, nextValue, previousValue});
+            previousValue = nextValue;
+          }, null, 'arrayChange');
 
-        previousValue.forEach((item) => this.startListening(item));
-      } else {
-        const subscription = observable.subscribe((nextValue) => {
-          this.onChange({observable, nextValue, previousValue});
-          previousValue = nextValue;
-        });
-        this._subscriptions.set(vm, subscription);
-        this._subscriptionsCount++;
-      }
-    } else if (typeof vm === 'object') {
-      for (const item of Object.values(vm)) {
-        this.startListening(item);
+          this._subscriptions.set(vm, subscription);
+          this._subscriptionsCount++;
+
+          previousValue.forEach((item) => _startListening(item));
+        } else {
+          const subscription = observable.subscribe((nextValue) => {
+            this.onChange({observable, nextValue, previousValue});
+            previousValue = nextValue;
+          });
+          this._subscriptions.set(vm, subscription);
+          this._subscriptionsCount++;
+          _startListening(previousValue);
+        }
+      } else if (this.isObject(vm)) {
+        Object.values(vm).forEach(item => _startListening(item));
       }
     }
+    _startListening(viewModel);
   }
 
-  @autobind
-  stopListening(vm) {
-    if (this.isUndoable(vm)) {
-      const observable = vm;
-      const previousValue = observable.peek();
+  stopListening = (viewModel) => {
+    const visited = new WeakSet();
 
-      if (this._subscriptions.has(observable)) {
-        this._subscriptions.get(observable).dispose();
-        this._subscriptions.delete(observable);
-        this._subscriptionsCount--;
+    const _stopListening = (vm) => {
+      if (visited.has(vm)) return;
+      if (this.isObject(vm)) visited.add(vm);
+      if (this.isUndoable(vm)) {
+        const observable = vm;
+        const unwrapped = observable.peek();
+
+        if (this._subscriptions.has(observable)) {
+          this._subscriptions.get(observable).dispose();
+          this._subscriptions.delete(observable);
+          this._subscriptionsCount--;
+        }
+
+        _stopListening(unwrapped);
+        return;
       }
 
-      if (Array.isArray(previousValue)) {
-        this.stopListening(previousValue);
+      if (this.isObject(vm)) {
+        Object.values(vm).forEach(item => _stopListening(item));
       }
-      return;
     }
-
-    if (typeof vm === 'object') {
-      for (const item of Object.values(vm)) {
-        this.stopListening(item);
-      }
-    }
+    _stopListening(viewModel);
   }
 
-  @autobind
-  takeSnapshot() {
+  isObject = (obj) => {
+    return (obj && (obj instanceof Object) && !(obj instanceof Function));
+  }
+  takeSnapshot = () => {
     clearTimeout(this.recording());
     this.past.splice(0, this.past().length - this.steps());
 
@@ -153,7 +158,7 @@ export default class UndoManager {
     this.recording(null);
   }
 
-  onChange({observable, nextValue, previousValue}) {
+  onChange = ({observable, nextValue, previousValue}) => {
     if (this._ignoreChanges) return;
     if (this.recording()) clearTimeout(this.recording()); // reset timeout
     else this.past.push(this._changeset); // push the changeset immediatelly
@@ -165,16 +170,14 @@ export default class UndoManager {
     else this.takeSnapshot();
   }
 
-  @autobind
-  destroy() {
+  destroy = () => {
     this.past([]);
     this.future([]);
     // this._subscriptions.forEach((subscription) => subscription.dispose());
     // this._subscriptions = [];
   }
 
-  @autobind
-  undo() {
+  undo = () => {
     if (!this.past().length) return;
     if (this.recording()) {
       clearTimeout(this.recording());
@@ -208,8 +211,7 @@ export default class UndoManager {
     setTimeout(() => this._ignoreChanges = false);
   }
 
-  @autobind
-  redo() {
+  redo = () => {
     if (!this.future().length) return;
     if (this.recording()) {
       clearTimeout(this.recording());
@@ -244,8 +246,7 @@ export default class UndoManager {
     setTimeout(() => this._ignoreChanges = false);
   }
 
-  @autobind
-  isUndoable(vm) {
+  isUndoable = (vm) => {
     return ko.isWritableObservable(vm) && ko.isSubscribable(vm);
   }
 }

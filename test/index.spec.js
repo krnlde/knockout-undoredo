@@ -21,7 +21,8 @@ describe('Knockout Undo Manager', () => {
     });
 
     beforeEach(() => {
-      undomanager = new UndoManager(viewModel);
+      undomanager = new UndoManager();
+      undomanager.startListening(viewModel);
     });
     afterEach(() => undomanager.destroy());
 
@@ -48,7 +49,8 @@ describe('Knockout Undo Manager', () => {
       viewModel = {
         name: ko.observable('Obama')
       };
-      undomanager = new UndoManager(viewModel, {steps: steps, throttle: 0});
+      undomanager = new UndoManager({steps: steps, throttle: 0});
+      undomanager.startListening(viewModel);
     });
     afterEach(() => undomanager.destroy());
 
@@ -103,6 +105,22 @@ describe('Knockout Undo Manager', () => {
       undomanager.undo();
       expect(viewModel.name()).to.equal('One');
     });
+
+    it('should handle classes as argument', () => {
+      class TestClass {
+        test1 = ko.observable('1');
+        test2 = ko.observable('2');
+        test3 = ko.observable('3');
+      }
+
+      class ExtendedTestClass extends TestClass {
+        test4 = ko.observable('4');
+      }
+      const undomanager = new UndoManager();
+      const instance = new ExtendedTestClass();
+      undomanager.startListening(instance);
+      expect(undomanager._subscriptionsCount).to.equal(4);
+    });
   });
 
   describe('Undo: Asynchonrous', () => {
@@ -112,7 +130,8 @@ describe('Knockout Undo Manager', () => {
       viewModel = {
         name: ko.observable('Obama')
       };
-      undomanager = new UndoManager(viewModel, {steps: 3, throttle: throttle});
+      undomanager = new UndoManager({steps: 3, throttle: throttle});
+      undomanager.startListening(viewModel);
     });
     afterEach(() => undomanager.destroy());
 
@@ -165,7 +184,8 @@ describe('Knockout Undo Manager', () => {
           ko.observable('Trump'),
         ]),
       };
-      undomanager = new UndoManager(viewModel);
+      undomanager = new UndoManager();
+      undomanager.startListening(viewModel);
     });
 
     afterEach(() => undomanager.destroy());
@@ -218,15 +238,20 @@ describe('Knockout Undo Manager', () => {
 
     beforeEach(() => {
       tree = new Tree();
-      undomanager = new UndoManager(tree);
+      undomanager = new UndoManager();
+      undomanager.startListening(tree);
     });
 
     afterEach(() => undomanager.destroy());
 
     it('should handle adding complex structures', () => {
+      expect(undomanager._subscriptionsCount).to.equal(1);
+
       const leafBranch = new Branch();
       leafBranch.branches.splice(leafBranch.branches().length, 0, new Leaf(), new Leaf());
       tree.branches.push(leafBranch);
+
+      expect(undomanager._subscriptionsCount).to.equal(4);
 
       const longBranch = new Branch();
       longBranch.branches.splice(longBranch.branches().length, 0, new Branch());
@@ -236,12 +261,13 @@ describe('Knockout Undo Manager', () => {
       expect(undomanager._subscriptionsCount).to.equal(7);
 
       undomanager.undo();
-
       expect(undomanager._subscriptionsCount).to.equal(1);
 
       undomanager.redo();
-
       expect(undomanager._subscriptionsCount).to.equal(7);
+      undomanager.undo();
+
+      expect(undomanager._subscriptionsCount).to.equal(1);
     });
 
     it('should handle deleting complex structures', () => {
@@ -294,23 +320,86 @@ describe('Knockout Undo Manager', () => {
 
   describe('Github issues', () => {
 
-    it('#3 - Crashes on circular references', () => {
-      function init() {
-        const undomanager = new UndoManager();
+    describe('#3 - Crashes on circular references', () => {
+      it('should not throw on circular dependencies in Arrays', () => {
+        function init() {
+          const undomanager = new UndoManager();
 
-        let semiCircleA = ko.observableArray();
-        let semiCircleB = ko.observableArray();
+          let semiCircleA = ko.observableArray();
+          let semiCircleB = ko.observableArray();
 
-        // Creating the circular reference here:
-        semiCircleA.push(semiCircleB);
-        semiCircleB.push(semiCircleA);
+          // Creating the circular reference here:
+          semiCircleA.push(semiCircleB);
+          semiCircleB.push(semiCircleA);
 
-        undomanager.startListening(semiCircleA);
+          undomanager.startListening(semiCircleA);
 
-        undomanager.destroy();
-      }
+          undomanager.destroy();
+        }
 
-      expect(init).not.to.throw();
+        expect(init).not.to.throw();
+      });
+
+      it('should not throw on circular dependencies in Classes', () => {
+        function init() {
+          const undomanager = new UndoManager();
+
+          class BasicProperties {
+            static staticObservable = ko.observable('static observable');
+            isNull = null;
+            isString = 'string';
+            isNumber = 42;
+            isArray = [1,2,3,4];
+            isObject = {a: 1, b: 2};
+          }
+
+          class DoubleLinkedListItem extends BasicProperties {
+            name = ko.observable('');
+            previous = null;
+            next = null;
+
+            constructor(name = '') {
+              super();
+              this.name(name);
+            }
+
+            addBefore(item) {
+              this.previous  = item;
+              item.next = this;
+            }
+
+            addAfter(item) {
+              this.next = item;
+              item.previous = this;
+            }
+          }
+
+          const item1 = new DoubleLinkedListItem('Name1');
+          const item2 = new DoubleLinkedListItem('Name2');
+
+          item1.addAfter(item2);
+          item2.addAfter(item1);
+
+          undomanager.startListening(item1);
+
+          expect(undomanager._subscriptionsCount).to.equal(2);
+
+          item1.name('Renamed');
+          expect(item1.name()).to.equal('Renamed');
+
+          expect(undomanager.hasUndo()).to.equal(true);
+          expect(undomanager.hasRedo()).to.equal(false);
+          undomanager.undo();
+          expect(undomanager.hasUndo()).to.equal(false);
+          expect(undomanager.hasRedo()).to.equal(true);
+
+          expect(item1.name()).to.equal('Name1');
+
+          undomanager.destroy();
+        }
+
+        expect(init).not.to.throw();
+      });
     });
   })
 });
