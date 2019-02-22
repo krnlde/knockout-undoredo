@@ -3,10 +3,10 @@
 [![Dependency Status](https://david-dm.org/krnlde/knockout-undoredo.svg)](https://david-dm.org/krnlde/knockout-undoredo)
 [![devDependency Status](https://david-dm.org/krnlde/knockout-undoredo/dev-status.svg)](https://david-dm.org/krnlde/knockout-undoredo#info=devDependencies)
 [![Known Vulnerabilities](https://snyk.io/test/github/krnlde/knockout-undoredo/badge.svg)](https://snyk.io/test/github/krnlde/knockout-undoredo)
+[![Greenkeeper badge](https://badges.greenkeeper.io/krnlde/knockout-undoredo.svg)](https://greenkeeper.io/)
 
 # Knockout Undo-Redo
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/krnlde/knockout-undoredo.svg)](https://greenkeeper.io/)
 Generic undo/redo history-management for knockout observables.
 
 
@@ -130,6 +130,6 @@ That way you can still explicitly reference the variable in your code, but it wo
 
 ```sh
 gulp do-release --patch
-git push
+git push --tags
 npm publish
 ```
