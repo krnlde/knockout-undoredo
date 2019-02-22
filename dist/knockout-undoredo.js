@@ -2,8 +2,6 @@
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-require("core-js/modules/es6.object.define-property");
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -15,13 +13,7 @@ require("core-js/modules/es6.string.includes");
 
 require("core-js/modules/es7.object.values");
 
-require("core-js/modules/es6.array.for-each");
-
-require("core-js/modules/es6.array.reduce");
-
 var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
-
-require("core-js/modules/es6.array.is-array");
 
 require("core-js/modules/es6.weak-set");
 
