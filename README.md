@@ -33,7 +33,8 @@ class ViewModel {
 const vm = new ViewModel();
 
 // Connect your viewmodel with the undomanager
-const undomanager = new UndoManager(vm);
+const undomanager = new UndoManager();
+undomanager.startListening(vm);
 
 ko.applyBindings(vm);
 
@@ -55,7 +56,8 @@ knockout-undoredo has the ability to collect multiple changes over a defined tim
 ```js
 // ...
 
-const undomanager = new UndoManager(vm, {throttle: 300});
+const undomanager = new UndoManager({throttle: 300});
+undomanager.startListening(vm);
 
 console.log(vm.message()); // Thanks Obama
 vm.name('Trump');
@@ -80,7 +82,8 @@ Snapshots are a collection of operations as one undo step. You can configure whi
 ```js
 // ...
 
-const undomanager = new UndoManager(vm, {throttle: 300});
+const undomanager = new UndoManager({throttle: 300});
+undomanager.startListening(vm);
 
 console.log(vm.message()); // Thanks Obama
 vm.name('Trump');
