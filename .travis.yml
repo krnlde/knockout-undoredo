@@ -3,5 +3,4 @@ os:
   - linux
   - osx
 node_js:
-  - v7
-  - v6
+  - v10
