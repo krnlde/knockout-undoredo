@@ -30,10 +30,8 @@ gulp.task('bump-version', () => {
 });
 
 gulp.task('changelog', () =>
-  gulp.src('CHANGELOG.md', {buffer: false})
-    .pipe(changelog({
-      preset: 'angular' // Or to any other commit message convention you use.
-    }))
+  gulp.src('CHANGELOG.md')
+    .pipe(changelog({preset: 'angular'}))
     .pipe(gulp.dest('./'))
 );
 
