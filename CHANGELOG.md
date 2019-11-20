@@ -1,3 +1,13 @@
+## [3.0.6](https://github.com/krnlde/knockout-undoredo/compare/v3.0.5...v3.0.6) (2019-11-20)
+
+
+### Bug Fixes
+
+* **chore:** Fix changelog task ([577a8ad](https://github.com/krnlde/knockout-undoredo/commit/577a8ad744503e1dd428885b46fe83c9f6f4a54d))
+* **chore:** restore changelog ([1d7557b](https://github.com/krnlde/knockout-undoredo/commit/1d7557b5baf4fba999153744e59b3ef6a9c1ffec))
+
+
+
 ## [3.0.5](https://github.com/krnlde/knockout-undoredo/compare/v3.0.3...v3.0.5) (2019-11-20)
 
 
