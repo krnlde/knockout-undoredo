@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.7.2",
-    "core-js": "2",
+    "core-js": "^3.4.8",
     "knockout": "3.5.1"
   },
   "devDependencies": {
