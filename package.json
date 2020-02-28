@@ -29,21 +29,21 @@
     "knockout": "3.5.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.7.2",
-    "@babel/plugin-proposal-class-properties": "^7.7.0",
-    "@babel/plugin-proposal-decorators": "^7.7.0",
-    "@babel/plugin-transform-runtime": "^7.6.2",
-    "@babel/preset-env": "^7.7.1",
-    "@babel/register": "^7.7.0",
-    "babel-eslint": "^10.0.3",
+    "@babel/core": "^7.8.6",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-decorators": "^7.8.3",
+    "@babel/plugin-transform-runtime": "^7.8.3",
+    "@babel/preset-env": "^7.8.6",
+    "@babel/register": "^7.8.6",
+    "babel-eslint": "^10.1.0",
     "chai": "^4.2.0",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-bump": "^3.1.0",
     "gulp-connect": "^5.7.0",
-    "gulp-conventional-changelog": "^2.0.26",
+    "gulp-conventional-changelog": "^2.0.29",
     "gulp-eslint": "^6.0.0",
-    "gulp-git": "^2.4.2",
+    "gulp-git": "^2.10.0",
     "gulp-mocha": "^7.0.0",
     "gulp-notify": "^3.0.0",
     "gulp-open": "^3.0.1",
@@ -52,6 +52,6 @@
     "gulp-uglify": "^3.0.2",
     "gulp-util": "^3.0.7",
     "minimist": "^1.2.0",
-    "mocha": "^7.0.1"
+    "mocha": "^7.1.0"
   }
 }
