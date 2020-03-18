@@ -52,6 +52,6 @@
     "gulp-uglify": "^3.0.2",
     "gulp-util": "^3.0.7",
     "minimist": "^1.2.0",
-    "mocha": "^7.1.0"
+    "mocha": "^7.1.1"
   }
 }
