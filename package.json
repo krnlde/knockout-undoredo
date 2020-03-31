@@ -43,7 +43,7 @@
     "gulp-connect": "^5.7.0",
     "gulp-conventional-changelog": "^2.0.29",
     "gulp-eslint": "^6.0.0",
-    "gulp-git": "^2.10.0",
+    "gulp-git": "^2.10.1",
     "gulp-mocha": "^7.0.0",
     "gulp-notify": "^3.0.0",
     "gulp-open": "^3.0.1",
