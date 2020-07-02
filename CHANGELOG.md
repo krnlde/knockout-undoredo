@@ -1,3 +1,14 @@
+## [3.0.7](https://github.com/krnlde/knockout-undoredo/compare/v3.0.6...v3.0.7) (2020-07-02)
+
+
+### Bug Fixes
+
+* upgrade @babel/runtime from 7.7.2 to 7.7.7 ([f087629](https://github.com/krnlde/knockout-undoredo/commit/f08762913342570ccbdf959ee16c604c8c9b86ec))
+* upgrade @babel/runtime from 7.7.7 to 7.8.3 ([1e05812](https://github.com/krnlde/knockout-undoredo/commit/1e05812308b6d3b62028768a78a3ed796e3a738f))
+* upgrade core-js from 2.6.10 to 2.6.11 ([9c71efd](https://github.com/krnlde/knockout-undoredo/commit/9c71efdd3ee958da47bae066b5ba79d0b4f64da0))
+
+
+
 ## [3.0.6](https://github.com/krnlde/knockout-undoredo/compare/v3.0.5...v3.0.6) (2019-11-20)
 
 
