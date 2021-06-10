@@ -1,6 +1,6 @@
 {
   "name": "knockout-undoredo",
-  "version": "3.0.7",
+  "version": "3.0.8",
   "description": "Generic undo/redo history-management for knockout observables",
   "repository": "krnlde/knockout-undoredo",
   "main": "dist/knockout-undoredo.min.js",
@@ -24,27 +24,27 @@
     "node": ">= 10.0.0"
   },
   "dependencies": {
-    "@babel/runtime": "^7.10.4",
+    "@babel/runtime": "^7.13.10",
     "core-js": "2.6.12",
     "knockout": "3.5.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.10.4",
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
-    "@babel/plugin-proposal-decorators": "^7.10.4",
-    "@babel/plugin-transform-runtime": "^7.10.4",
-    "@babel/preset-env": "^7.10.4",
-    "@babel/register": "^7.10.4",
+    "@babel/core": "^7.13.10",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/plugin-proposal-decorators": "^7.13.5",
+    "@babel/plugin-transform-runtime": "^7.13.10",
+    "@babel/preset-env": "^7.13.10",
+    "@babel/register": "^7.13.8",
     "babel-eslint": "^10.1.0",
-    "chai": "^4.2.0",
+    "chai": "^4.3.4",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-bump": "^3.2.0",
     "gulp-connect": "^5.7.0",
-    "gulp-conventional-changelog": "^2.0.32",
+    "gulp-conventional-changelog": "^2.0.35",
     "gulp-eslint": "^6.0.0",
     "gulp-git": "^2.10.1",
-    "gulp-mocha": "^7.0.0",
+    "gulp-mocha": "^8.0.0",
     "gulp-notify": "^3.0.0",
     "gulp-open": "^3.0.1",
     "gulp-rename": "^2.0.0",
@@ -52,6 +52,6 @@
     "gulp-uglify": "^3.0.2",
     "gulp-util": "^3.0.7",
     "minimist": "^1.2.5",
-    "mocha": "^8.0.1"
+    "mocha": "^8.3.2"
   }
 }
