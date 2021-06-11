@@ -24,7 +24,7 @@
     "node": ">= 10.0.0"
   },
   "dependencies": {
-    "@babel/runtime": "^7.13.10",
+    "@babel/runtime": "^7.14.0",
     "core-js": "2.6.12",
     "knockout": "3.5.1"
   },
